@@ -9,20 +9,25 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# ─── PALETA DE CORES ─────────────────────────────────────────────────────────
+# Blue-Black : #0D1B2A  │  Ciano Elétrico : #1BE7FF
+# Vermelho   : #FE4A49  │  Verde          : #31E981
+# Amarelo    : #FED766  │  Roxo           : #8980F5
+
 # ─── GLOBAL CSS ──────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 html, body,
 [data-testid="stAppViewContainer"],
 [data-testid="stMain"] {
-    background-color: #0b0f19 !important;
+    background-color: #0D1B2A !important;
     color: #e2e8f0 !important;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 [data-testid="stSidebar"] {
-    background-color: #111827 !important;
-    border-right: 2px solid #1e293b !important;
+    background-color: #091420 !important;
+    border-right: 2px solid #1BE7FF22 !important;
 }
 [data-testid="stSidebar"] p,
 [data-testid="stSidebar"] label,
@@ -37,8 +42,8 @@ html, body,
 
 /* ── Cards ── */
 .card {
-    background: #161d2e;
-    border: 1px solid #1e3a5f;
+    background: #112031;
+    border: 1px solid #1BE7FF22;
     border-radius: 14px;
     padding: 18px 20px;
     height: 100%;
@@ -46,39 +51,45 @@ html, body,
 }
 
 /* ── Player info ── */
-.player-name { font-size: 26px; font-weight: 800; color: #fbbf24; line-height: 1.2; }
-.player-pos  { font-size: 13px; color: #94a3b8; margin-top: 2px; }
-.player-club { font-size: 14px; color: #60a5fa; font-weight: 600; margin-top: 2px; }
+.player-name { font-size: 26px; font-weight: 800; color: #1BE7FF; line-height: 1.2; }
+.player-pos  { font-size: 13px; color: #8980F5; margin-top: 2px; font-weight:600; }
+.player-club { font-size: 14px; color: #31E981; font-weight: 600; margin-top: 2px; }
 
 .info-row  { display: flex; justify-content: space-between; margin-top: 10px; gap: 8px; }
-.info-cell { flex: 1; background: #0f172a; border-radius: 8px; padding: 8px; text-align: center; }
-.info-cell .ic-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
-.info-cell .ic-val   { font-size: 14px; font-weight: 700; color: #fbbf24; }
+.info-cell { flex: 1; background: #0D1B2A; border-radius: 8px; padding: 8px; text-align: center;
+             border: 1px solid #1BE7FF11; }
+.info-cell .ic-label { font-size: 10px; color: #8980F5; text-transform: uppercase; letter-spacing: .5px; }
+.info-cell .ic-val   { font-size: 14px; font-weight: 700; color: #FED766; }
 
 .stat-row { display: flex; gap: 8px; margin-top: 12px; }
-.stat-box { flex: 1; background: #0f172a; border: 1px solid #1e3a5f;
+.stat-box { flex: 1; background: #0D1B2A; border: 1px solid #1BE7FF22;
             border-radius: 10px; text-align: center; padding: 10px 6px; }
-.stat-box .sv { font-size: 24px; font-weight: 800; color: #fbbf24; }
-.stat-box .sl { font-size: 10px; color: #64748b; text-transform: uppercase;
+.stat-box .sv { font-size: 24px; font-weight: 800; color: #1BE7FF; }
+.stat-box .sl { font-size: 10px; color: #8980F5; text-transform: uppercase;
                 letter-spacing: .8px; margin-top: 2px; }
 
 /* ── Ratings ── */
-.r-label { font-size: 11px; color: #64748b; text-transform: uppercase;
+.r-label { font-size: 11px; color: #8980F5; text-transform: uppercase;
            letter-spacing: .8px; margin-bottom: 5px; }
 .rating-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
-.r-badge { background: #7f1d1d; color: #fef2f2; font-size: 24px; font-weight: 900;
-           border-radius: 8px; padding: 4px 14px; min-width: 64px; text-align: center; }
-.r-badge.main { font-size: 30px; }
-.r-badge.comb { background: #4c1d95; }
-.r-badge.cons { background: #14532d; }
-.r-badge.posi { background: #1e3a8a; }
-.rank-tag { background: #1e293b; color: #93c5fd; border-radius: 6px;
-            padding: 3px 10px; font-size: 13px; font-weight: 700; }
+
+.r-badge      { color: #0D1B2A; font-size: 24px; font-weight: 900;
+                border-radius: 8px; padding: 4px 14px;
+                min-width: 64px; text-align: center; }
+.r-badge.main { font-size: 30px; background: #1BE7FF; color: #0D1B2A; }
+.r-badge.comb { background: #FE4A49; color: #fff; }
+.r-badge.cons { background: #31E981; color: #0D1B2A; }
+.r-badge.posi { background: #8980F5; color: #fff; }
+
+.rank-tag { background: #0D1B2A; color: #1BE7FF; border: 1px solid #1BE7FF44;
+            border-radius: 6px; padding: 3px 10px;
+            font-size: 13px; font-weight: 700; }
 
 /* ── Aspects ── */
 .section-title { font-size: 11px; font-weight: 700; letter-spacing: 1px;
                  text-transform: uppercase; margin-bottom: 8px; }
-.aspect-tag { display: inline-block; background: #1a2540; border: 1px solid #2d4a7a;
+.aspect-tag { display: inline-block; background: #0D1B2A;
+              border: 1px solid #1BE7FF33;
               border-radius: 6px; padding: 4px 10px; font-size: 12px;
               color: #cbd5e1; margin: 3px 2px; }
 
@@ -87,38 +98,46 @@ html, body,
 .attr-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
 .attr-name { font-size: 13px; color: #94a3b8; }
 .attr-val  { font-size: 13px; font-weight: 700; }
-.bar-bg   { background: #1e293b; border-radius: 6px; height: 10px; overflow: hidden; }
+.bar-bg   { background: #0D1B2A; border-radius: 6px; height: 10px; overflow: hidden;
+            border: 1px solid #1BE7FF11; }
 .bar-fill { height: 10px; border-radius: 6px; }
 
 /* ── Profile ── */
 .profile-card { display: flex; align-items: center; justify-content: space-between; }
-.profile-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-.profile-name  { font-size: 22px; font-weight: 800; color: #fbbf24; }
+.profile-label { font-size: 11px; color: #8980F5; text-transform: uppercase; letter-spacing: 1px; }
+.profile-name  { font-size: 22px; font-weight: 800; }
 .pct-item { font-size: 13px; margin-bottom: 4px; }
 
 /* ── Page header ── */
-.page-header { color: #fbbf24; font-size: 20px; font-weight: 800;
-               letter-spacing: 2px; margin-bottom: 14px; }
+.page-header { color: #1BE7FF; font-size: 20px; font-weight: 800;
+               letter-spacing: 2px; margin-bottom: 14px;
+               border-bottom: 2px solid #1BE7FF33;
+               padding-bottom: 8px; }
 
 /* ── Buttons ── */
 .stButton > button {
-    background: #1e293b !important; color: #cbd5e1 !important;
-    border: 1px solid #334155 !important; border-radius: 8px !important;
+    background: #0D1B2A !important; color: #1BE7FF !important;
+    border: 1px solid #1BE7FF44 !important; border-radius: 8px !important;
     font-size: 13px !important; transition: all .2s !important;
 }
 .stButton > button:hover {
-    background: #fbbf24 !important; color: #0b0f19 !important;
-    border-color: #fbbf24 !important;
+    background: #1BE7FF !important; color: #0D1B2A !important;
+    border-color: #1BE7FF !important; font-weight: 700 !important;
 }
 
 /* ── Inputs ── */
 .stSelectbox > div > div,
 .stTextInput > div > div {
-    background: #1e293b !important; border: 1px solid #334155 !important;
+    background: #0D1B2A !important; border: 1px solid #1BE7FF33 !important;
     color: #cbd5e1 !important; border-radius: 8px !important;
 }
 .stCheckbox label { color: #cbd5e1 !important; }
-hr { border-color: #1e293b !important; }
+hr { border-color: #1BE7FF22 !important; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0D1B2A; }
+::-webkit-scrollbar-thumb { background: #1BE7FF44; border-radius: 3px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -298,64 +317,90 @@ PLAYERS = {
 }
 
 PROFILE_COLORS = {
-    "Combativo": "#ef4444",
-    "Construtor": "#22c55e",
-    "Posicional": "#3b82f6",
-    "Híbrido":    "#fbbf24",
+    "Combativo": "#FE4A49",
+    "Construtor": "#31E981",
+    "Posicional": "#8980F5",
+    "Híbrido":    "#FED766",
 }
+
+PROFILE_TEXT_DARK = {"Construtor", "Híbrido"}   # cores claras → texto escuro
+
+
+# ─── SESSION STATE (fix index bug) ───────────────────────────────────────────
+if "selected_player" not in st.session_state:
+    st.session_state["selected_player"] = list(PLAYERS.keys())[0]
 
 
 # ─── SIDEBAR ─────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(
-        '<p style="color:#fbbf24;font-size:18px;font-weight:800;letter-spacing:2px;margin:0">⚽ SCOUT ANALYTICS</p>',
+        '<p style="color:#1BE7FF;font-size:18px;font-weight:800;'
+        'letter-spacing:2px;margin:0">⚽ SCOUT ANALYTICS</p>',
         unsafe_allow_html=True,
     )
     st.divider()
 
     st.markdown(
-        '<p style="color:#fbbf24;font-size:11px;font-weight:700;letter-spacing:1px;'
+        '<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;'
         'text-transform:uppercase;margin-bottom:6px">Filtrar Perfil</p>',
         unsafe_allow_html=True,
     )
-    f_combativo = st.checkbox("⚡ Combativo")
+    f_combativo  = st.checkbox("⚡ Combativo")
     f_construtor = st.checkbox("🔧 Construtor")
     f_hibrido    = st.checkbox("🔀 Híbrido")
     f_posicional = st.checkbox("📍 Posicional")
 
     st.divider()
     st.markdown(
-        '<p style="color:#fbbf24;font-size:11px;font-weight:700;letter-spacing:1px;'
+        '<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;'
         'text-transform:uppercase;margin-bottom:6px">Jogadores</p>',
         unsafe_allow_html=True,
     )
 
-    search = st.text_input("", placeholder="🔍 Buscar jogador...", label_visibility="collapsed")
+    search = st.text_input(
+        "", placeholder="🔍 Buscar jogador...", label_visibility="collapsed"
+    )
 
-    # Filter list
-    names = list(PLAYERS.keys())
-    if search:
-        names = [n for n in names
-                 if search.lower() in n.lower() or search.lower() in PLAYERS[n]["club"].lower()]
+    # ── build filtered list ──────────────────────────────────────────────────
+    all_names = list(PLAYERS.keys())
 
     active_profiles = (
-        (["Combativo"] if f_combativo else []) +
+        (["Combativo"]  if f_combativo  else []) +
         (["Construtor"] if f_construtor else []) +
-        (["Híbrido"]    if f_hibrido   else []) +
+        (["Híbrido"]    if f_hibrido    else []) +
         (["Posicional"] if f_posicional else [])
     )
-    if active_profiles:
-        names = [n for n in names if PLAYERS[n]["profile"] in active_profiles]
-    if not names:
-        names = list(PLAYERS.keys())
 
-    display_names  = [f"{n} ({PLAYERS[n]['club']})" for n in names]
-    selected_disp  = st.selectbox("", display_names, label_visibility="collapsed")
-    selected_player = names[display_names.index(selected_disp)]
+    filtered = [
+        n for n in all_names
+        if (not search or search.lower() in n.lower()
+                       or search.lower() in PLAYERS[n]["club"].lower())
+        and (not active_profiles or PLAYERS[n]["profile"] in active_profiles)
+    ]
+
+    if not filtered:
+        filtered = all_names   # fallback: never empty
+
+    display_names = [f"{n} ({PLAYERS[n]['club']})" for n in filtered]
+
+    # safe default index ──────────────────────────────────────────────────────
+    cur = st.session_state["selected_player"]
+    if cur in filtered:
+        default_idx = filtered.index(cur)
+    else:
+        default_idx = 0
+
+    chosen_disp = st.selectbox(
+        "", display_names,
+        index=default_idx,
+        label_visibility="collapsed",
+    )
+    selected_player = filtered[display_names.index(chosen_disp)]
+    st.session_state["selected_player"] = selected_player   # persist choice
 
     st.divider()
     st.markdown(
-        '<p style="color:#fbbf24;font-size:11px;font-weight:700;letter-spacing:1px;'
+        '<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;'
         'text-transform:uppercase;margin-bottom:6px">Navegação</p>',
         unsafe_allow_html=True,
     )
@@ -365,8 +410,8 @@ with st.sidebar:
 
     st.divider()
     st.markdown(
-        '<p style="color:#64748b;font-size:12px">👥 Jogadores Analisados: '
-        '<span style="color:#fbbf24;font-weight:700">78</span></p>',
+        '<p style="color:#475569;font-size:12px">👥 Jogadores Analisados: '
+        '<span style="color:#1BE7FF;font-weight:700">78</span></p>',
         unsafe_allow_html=True,
     )
 
@@ -377,7 +422,12 @@ def tags_html(items: list) -> str:
 
 
 def attr_bar(label: str, value: int) -> str:
-    color = "#22c55e" if value >= 70 else ("#fbbf24" if value >= 40 else "#ef4444")
+    if value >= 70:
+        color = "#31E981"
+    elif value >= 40:
+        color = "#FED766"
+    else:
+        color = "#FE4A49"
     return f"""
     <div class="attr-wrap">
       <div class="attr-header">
@@ -391,18 +441,19 @@ def attr_bar(label: str, value: int) -> str:
 
 
 # ─── MAIN CONTENT ────────────────────────────────────────────────────────────
-p = PLAYERS[selected_player]
-pc = PROFILE_COLORS.get(p["profile"], "#fbbf24")
+p  = PLAYERS[selected_player]
+pc = PROFILE_COLORS.get(p["profile"], "#1BE7FF")
+text_color = "#0D1B2A" if p["profile"] in PROFILE_TEXT_DARK else "#fff"
 
 st.markdown(
     f'<div class="page-header">📊 ANÁLISE DE JOGADORES — {p["position"].upper()}S</div>',
     unsafe_allow_html=True,
 )
 
-# ── ROW 1 ────────────────────────────────────────────────────────────────────
+# ── ROW 1 ─────────────────────────────────────────────────────────────────────
 col1, col2, col3 = st.columns([2, 2, 3], gap="medium")
 
-# Player card
+# ── Player card ────────────────────────────────────────────────────────────���──
 with col1:
     st.markdown(f"""
     <div class="card">
@@ -447,25 +498,26 @@ with col1:
       </div>
 
       <div style="margin-top:14px;text-align:center">
-        <span style="background:{pc};color:#0b0f19;font-weight:800;font-size:13px;
-                     border-radius:20px;padding:5px 18px;letter-spacing:1px">
+        <span style="background:{pc};color:{text_color};font-weight:800;font-size:13px;
+                     border-radius:20px;padding:5px 20px;letter-spacing:1px">
           {p['profile']}
         </span>
       </div>
     </div>
     """, unsafe_allow_html=True)
 
-# Ratings card
+# ── Ratings card ──────────────────────────────────────────────────��───────────
 with col2:
     st.markdown(f"""
     <div class="card">
-      <div class="r-label">⭐ RATING GERAL <small style="color:#334155">(Rank)</small></div>
+      <div class="r-label">⭐ RATING GERAL <small style="color:#1BE7FF44">(Rank)</small></div>
       <div class="rating-row" style="margin-bottom:14px">
         <div class="r-badge main">{p['rating']}</div>
         <div class="rank-tag">#{p['rank']}</div>
       </div>
 
-      <div style="background:#0f172a;border-radius:10px;padding:14px">
+      <div style="background:#0D1B2A;border-radius:10px;padding:14px;
+                  border:1px solid #1BE7FF11">
         <div class="r-label">⚡ COMBATIVO</div>
         <div class="rating-row" style="margin-bottom:12px">
           <div class="r-badge comb">{p['combativo']}</div>
@@ -487,22 +539,22 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
-# Aspects card
+# ── Aspects card ──────────────────────────────────────────────────────────────
 with col3:
     st.markdown(f"""
     <div class="card">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px">
         <div>
-          <div class="section-title" style="color:#f87171">⚔️ Aspectos Defensivos</div>
+          <div class="section-title" style="color:#FE4A49">⚔️ Aspectos Defensivos</div>
           {tags_html(p['aspect_def'])}
         </div>
         <div>
-          <div class="section-title" style="color:#4ade80">🚀 Aspectos Ofensivos</div>
+          <div class="section-title" style="color:#31E981">🚀 Aspectos Ofensivos</div>
           {tags_html(p['aspect_off'])}
         </div>
       </div>
-      <div style="border-top:1px solid #1e3a5f;padding-top:14px">
-        <div class="section-title" style="color:#93c5fd">🔧 Aspectos de Construção</div>
+      <div style="border-top:1px solid #1BE7FF22;padding-top:14px">
+        <div class="section-title" style="color:#1BE7FF">🔧 Aspectos de Construção</div>
         {tags_html(p['aspect_const'])}
         <div style="font-size:10px;color:#475569;margin-top:8px">
           *PCF = Passes Construtores Finais
@@ -512,11 +564,11 @@ with col3:
     """, unsafe_allow_html=True)
 
 
-# ── ROW 2 ────────────────────────────────────────────────────────────────────
+# ── ROW 2 ───────��─────────────────────────────────────────────────────────────
 st.markdown("<br>", unsafe_allow_html=True)
 col4, col5 = st.columns([3, 2], gap="medium")
 
-# Radar + profile
+# ── Radar + profile ───────────────────────────────────────────────────────────
 with col4:
     st.markdown(f"""
     <div class="card" style="margin-bottom:8px">
@@ -526,13 +578,13 @@ with col4:
           <div class="profile-name" style="color:{pc}">{p['profile']}</div>
         </div>
         <div>
-          <div class="pct-item" style="color:#fbbf24">
+          <div class="pct-item" style="color:#FE4A49">
             ⚡ Combativo &nbsp;<b>{p['pct_combativo']}%</b>
           </div>
-          <div class="pct-item" style="color:#4ade80">
+          <div class="pct-item" style="color:#31E981">
             🔧 Construtor &nbsp;<b>{p['pct_construtor']}%</b>
           </div>
-          <div class="pct-item" style="color:#93c5fd">
+          <div class="pct-item" style="color:#8980F5">
             📍 Posicional &nbsp;<b>{p['pct_posicional']}%</b>
           </div>
         </div>
@@ -544,37 +596,50 @@ with col4:
     vals = [p["pct_combativo"], p["pct_construtor"], p["pct_posicional"]]
 
     fig = go.Figure()
+    # Background fill layers for visual depth
+    for level, alpha in [(75, 0.04), (50, 0.06), (25, 0.08)]:
+        fig.add_trace(go.Scatterpolar(
+            r=[level] * 4,
+            theta=cats + [cats[0]],
+            fill="toself",
+            fillcolor=f"rgba(27,231,255,{alpha})",
+            line=dict(color="rgba(27,231,255,0.1)", width=0.5),
+            hoverinfo="skip", showlegend=False,
+        ))
+
     fig.add_trace(go.Scatterpolar(
         r=vals + [vals[0]],
         theta=cats + [cats[0]],
         fill="toself",
-        fillcolor="rgba(251,191,36,0.13)",
-        line=dict(color="#fbbf24", width=2.5),
+        fillcolor=f"rgba({int(pc[1:3],16)},{int(pc[3:5],16)},{int(pc[5:7],16)},0.18)",
+        line=dict(color=pc, width=3),
+        mode="lines+markers",
+        marker=dict(size=8, color=pc, line=dict(color="#0D1B2A", width=2)),
         hovertemplate="<b>%{theta}</b>: %{r}%<extra></extra>",
     ))
     fig.update_layout(
         polar=dict(
-            bgcolor="rgba(15,23,42,0.9)",
+            bgcolor="rgba(13,27,42,0.95)",
             radialaxis=dict(
                 visible=True, range=[0, 75],
                 tickvals=[15, 30, 45, 60, 75],
-                tickfont=dict(color="#475569", size=9),
-                gridcolor="#1e3a5f", linecolor="#1e3a5f",
+                tickfont=dict(color="#1BE7FF66", size=9),
+                gridcolor="#1BE7FF22", linecolor="#1BE7FF22",
             ),
             angularaxis=dict(
                 tickfont=dict(color="#e2e8f0", size=14),
-                gridcolor="#1e3a5f", linecolor="#1e3a5f",
+                gridcolor="#1BE7FF22", linecolor="#1BE7FF22",
             ),
         ),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
         margin=dict(t=40, b=40, l=60, r=60),
-        height=310,
+        height=320,
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-# Attribute bars
+# ── Attribute bars ────────────────────────────────────────────────────────────
 with col5:
     bars = (
         attr_bar("Construção",       p["construcao"])   +
@@ -585,17 +650,19 @@ with col5:
     )
     st.markdown(f"""
     <div class="card">
-      <div class="section-title" style="color:#fbbf24;margin-bottom:18px">
-        📊 Atributos Físico-Táticos
+      <div class="section-title"
+           style="color:#1BE7FF;margin-bottom:18px;font-size:12px;letter-spacing:1px">
+        📊 ATRIBUTOS FÍSICO-TÁTICOS
       </div>
       {bars}
     </div>
     """, unsafe_allow_html=True)
 
-# ── FOOTER ───────────────────────────────────��───────────────────────────────
+
+# ── FOOTER ────────────────────────────────────────────────────────────────────
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown(
-    '<div style="text-align:center;color:#334155;font-size:12px;letter-spacing:1px">'
+    '<div style="text-align:center;color:#1BE7FF33;font-size:12px;letter-spacing:1px">'
     '⚽ Scout Analytics · Dados da Temporada 2025 · 78 Jogadores Analisados'
     '</div>',
     unsafe_allow_html=True,
