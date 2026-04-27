@@ -22,6 +22,10 @@ MUTED  = "#5a7a9a"
 TEXT   = "#c8d8e8"
 DARK   = "#070e18"
 
+# rgba helpers — Plotly requires rgba() not 8-digit hex
+YELLOW_FILL = "rgba(254,215,102,0.18)"
+CYAN_FILL   = "rgba(27,231,255,0.08)"
+
 # PLAYER DATA
 PLAYERS = {
     "Adriano Martins (Atletico GO)": {
@@ -69,12 +73,12 @@ PLAYERS = {
         "bars": [
             ("Construcao", 55, "#FED766"), ("Ofensividade", 91, "#31E981"),
             ("1vs1 Defensivo", 38, "#FED766"), ("Contencao", 42, "#FED766"),
-            ("Duelo Aero", 31, "#FE4A49"),
+            ("Duelo Aereo", 31, "#FE4A49"),
         ],
     },
 }
 
-# CSS — build as plain string, no f-string, then format() to inject colors
+# CSS — plain string with token replacement (no f-strings, no {{ }})
 CSS_TEMPLATE = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -89,7 +93,7 @@ CSS_TEMPLATE = """
 }
 section[data-testid="stSidebar"] {
     background: DARK_COLOR !important;
-    border-right: 1px solid CYAN_COLOR33;
+    border-right: 1px solid rgba(27,231,255,0.13);
 }
 section[data-testid="stSidebar"] > div {
     padding-top: 0 !important;
@@ -115,7 +119,7 @@ section[data-testid="stSidebar"] > div {
     margin-bottom: 2px;
 }
 .stButton > button:hover {
-    background: CYAN_COLOR16;
+    background: rgba(27,231,255,0.07);
     border-color: CYAN_COLOR;
     color: CYAN_COLOR;
 }
@@ -188,10 +192,10 @@ def rating_pill(label, value, rank, pill_color):
 def asp_section_html(title, items):
     h  = '<div style="font-size:0.58rem;font-weight:700;letter-spacing:0.16em;'
     h += 'text-transform:uppercase;color:' + CYAN + ';padding-bottom:0.2rem;'
-    h += 'border-bottom:1px solid ' + CYAN + '44;margin-bottom:0.35rem;">' + title + '</div>'
+    h += 'border-bottom:1px solid rgba(27,231,255,0.25);margin-bottom:0.35rem;">' + title + '</div>'
     for name_, ico in items:
         h += '<div style="display:flex;align-items:center;gap:0.4rem;padding:0.22rem 0;'
-        h += 'font-size:0.76rem;color:' + TEXT + ';border-bottom:1px solid ' + BORDER + '44;">'
+        h += 'font-size:0.76rem;color:' + TEXT + ';border-bottom:1px solid rgba(26,58,92,0.5);">'
         h += icon_html(ico) + '<span>' + name_ + '</span></div>'
     return h
 
@@ -201,10 +205,9 @@ def bar_html(label, value, color):
     h  = '<div style="margin-bottom:0.62rem;">'
     h += '<div style="font-size:0.68rem;color:' + MUTED + ';font-weight:500;margin-bottom:0.12rem;">' + label + '</div>'
     h += '<div style="display:flex;align-items:center;gap:0.42rem;">'
-    h += '<div style="flex:1;height:7px;background:' + DARK + ';border-radius:3px;'
-    h += 'overflow:hidden;border:1px solid ' + BORDER + '55;">'
-    h += '<div style="height:100%;width:' + str(pct) + '%;background:' + color + ';border-radius:3px;'
-    h += 'box-shadow:0 0 6px ' + color + '55;"></div>'
+    h += '<div style="flex:1;height:7px;background:' + DARK + ';border-radius:3px;overflow:hidden;'
+    h += 'border:1px solid rgba(26,58,92,0.6);">'
+    h += '<div style="height:100%;width:' + str(pct) + '%;background:' + color + ';border-radius:3px;"></div>'
     h += '</div>'
     h += '<div style="font-size:0.68rem;font-weight:700;color:#fff;min-width:20px;'
     h += 'text-align:right;">' + str(value) + '</div>'
@@ -217,28 +220,34 @@ def build_radar(p):
     vals = [p["p_comb"], p["p_cons"], p["p_posi"]]
     fig  = go.Figure()
 
+    # Grid rings
     for ring in [20, 40, 60, 80, 100]:
         fig.add_trace(go.Scatterpolar(
             r=[ring, ring, ring, ring],
             theta=[cats[0], cats[1], cats[2], cats[0]],
             mode="lines",
             line=dict(color=BORDER, width=0.7),
-            showlegend=False, hoverinfo="skip",
+            showlegend=False,
+            hoverinfo="skip",
         ))
 
+    # Axis spokes
     for cat in cats:
         fig.add_trace(go.Scatterpolar(
-            r=[0, 100], theta=[cat, cat],
+            r=[0, 100],
+            theta=[cat, cat],
             mode="lines",
             line=dict(color=BORDER, width=1),
-            showlegend=False, hoverinfo="skip",
+            showlegend=False,
+            hoverinfo="skip",
         ))
 
+    # Player polygon — fillcolor MUST be rgba(), not 8-digit hex
     fig.add_trace(go.Scatterpolar(
         r=vals + [vals[0]],
         theta=cats + [cats[0]],
         fill="toself",
-        fillcolor=YELLOW + "30",
+        fillcolor=YELLOW_FILL,
         line=dict(color=YELLOW, width=2.5),
         mode="lines+markers",
         marker=dict(size=7, color=YELLOW, line=dict(color=BG, width=1.5)),
@@ -318,7 +327,7 @@ p = PLAYERS[player_key]
 
 
 # HEADER BAR
-hdr  = '<div style="background:' + DARK + ';border-bottom:1px solid ' + CYAN + '22;'
+hdr  = '<div style="background:' + DARK + ';border-bottom:1px solid rgba(27,231,255,0.13);'
 hdr += 'padding:0.35rem 0.2rem;display:flex;justify-content:space-between;'
 hdr += 'align-items:center;margin-bottom:0.7rem;">'
 hdr += '<div style="display:flex;align-items:center;gap:0.45rem;">'
@@ -343,37 +352,33 @@ c1, c2, c3, c4, c5 = st.columns([2.0, 1.5, 2.1, 1.75, 2.0], gap="small")
 with c1:
     card  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:1rem;height:100%;">'
 
-    # Avatar
     card += '<div style="text-align:center;margin-bottom:0.7rem;">'
     card += '<div style="display:inline-flex;align-items:center;justify-content:center;'
     card += 'width:72px;height:72px;border-radius:50%;'
     card += 'background:linear-gradient(135deg,' + BORDER + ',' + DARK + ');'
-    card += 'border:2px solid ' + CYAN + '44;font-size:2.4rem;line-height:1;">&#x1F464;</div>'
+    card += 'border:2px solid rgba(27,231,255,0.25);font-size:2.4rem;line-height:1;">&#x1F464;</div>'
     card += '</div>'
 
-    # Name / position / club
     card += '<div style="text-align:center;margin-bottom:0.8rem;">'
     card += '<div style="font-size:1.32rem;font-weight:800;color:#fff;letter-spacing:-0.01em;line-height:1.15;">' + p["name"] + '</div>'
     card += '<div style="font-size:0.75rem;color:' + MUTED + ';margin-top:0.18rem;">' + p["position"] + '</div>'
     card += '<div style="font-size:0.8rem;font-weight:600;color:' + CYAN + ';margin-top:0.1rem;">' + p["club"] + '</div>'
     card += '</div>'
 
-    # Bio grid
     card += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.35rem;margin-bottom:0.75rem;">'
     bio_items = [
-        ("Ano",         MUTED, str(p["year"])),
+        ("Ano",           MUTED, str(p["year"])),
         ("Nacionalidade", CYAN,  p["nat"]),
-        ("Altura",      MUTED, str(p["height"]) + " cm"),
-        ("Pe dominante", CYAN,  p["foot"]),
+        ("Altura",        MUTED, str(p["height"]) + " cm"),
+        ("Pe dominante",  CYAN,  p["foot"]),
     ]
     for bio_lbl, bio_col, bio_val in bio_items:
-        card += '<div style="background:' + DARK + ';border:1px solid ' + BORDER + '55;border-radius:6px;padding:0.3rem 0.45rem;">'
+        card += '<div style="background:' + DARK + ';border:1px solid rgba(26,58,92,0.5);border-radius:6px;padding:0.3rem 0.45rem;">'
         card += '<div style="font-size:0.55rem;color:' + bio_col + ';text-transform:uppercase;letter-spacing:0.1em;">' + bio_lbl + '</div>'
         card += '<div style="font-size:0.88rem;font-weight:700;color:#fff;">' + bio_val + '</div>'
         card += '</div>'
     card += '</div>'
 
-    # Stats strip
     card += '<div style="background:' + DARK + ';border:1px solid ' + BORDER + ';border-radius:8px;padding:0.55rem 0.6rem;">'
     card += '<div style="display:flex;justify-content:space-between;margin-bottom:0.28rem;">'
     for stat_lbl in ["Minutagem", "Gols", "Assist."]:
@@ -393,9 +398,8 @@ with c2:
     rtg  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.9rem;height:100%;">'
     rtg += '<div style="font-size:0.58rem;font-weight:700;letter-spacing:0.16em;'
     rtg += 'text-transform:uppercase;color:' + CYAN + ';padding-bottom:0.2rem;'
-    rtg += 'border-bottom:1px solid ' + CYAN + '44;margin-bottom:0.55rem;">Ratings</div>'
+    rtg += 'border-bottom:1px solid rgba(27,231,255,0.25);margin-bottom:0.55rem;">Ratings</div>'
 
-    # Rating Geral
     rtg += '<div style="background:' + DARK + ';border:1px solid ' + BORDER + ';border-radius:8px;padding:0.48rem 0.65rem;margin-bottom:0.42rem;">'
     rtg += '<div style="font-size:0.56rem;font-weight:600;letter-spacing:0.13em;text-transform:uppercase;color:' + MUTED + ';">'
     rtg += 'Rating Geral <span style="color:' + CYAN + ';font-size:0.48rem;">(Rank)</span></div>'
@@ -433,7 +437,7 @@ with c3:
 with c4:
     asp  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.85rem;height:100%;">'
     asp += asp_section_html("Aspectos Defensivos", p["def_asp"])
-    asp += '<div style="margin:0.55rem 0;border-top:1px solid ' + BORDER + '55;"></div>'
+    asp += '<div style="margin:0.55rem 0;border-top:1px solid rgba(26,58,92,0.6);"></div>'
     asp += asp_section_html("Aspectos de Construcao", p["con_asp"])
     asp += '<div style="margin-top:0.3rem;font-size:0.55rem;color:' + MUTED + ';">*Passes Construtores Finais</div>'
     asp += '</div>'
@@ -449,7 +453,7 @@ with c5:
     off += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.85rem;">'
     off += '<div style="font-size:0.58rem;font-weight:700;letter-spacing:0.16em;'
     off += 'text-transform:uppercase;color:' + CYAN + ';padding-bottom:0.2rem;'
-    off += 'border-bottom:1px solid ' + CYAN + '44;margin-bottom:0.55rem;">Metricas</div>'
+    off += 'border-bottom:1px solid rgba(27,231,255,0.25);margin-bottom:0.55rem;">Metricas</div>'
     for lbl, val, col in p["bars"]:
         off += bar_html(lbl, val, col)
     off += "</div>"
