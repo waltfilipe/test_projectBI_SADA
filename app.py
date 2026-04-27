@@ -207,151 +207,108 @@ def bar_html(label, value, color):
     )
 
 
-# ====== NEW PROFESSIONAL RADAR (ALTAIR) ======
-def build_pro_radar_altair(p, size=360):
+def build_clean_triangle_radar(p):
     cats = ["Combativo", "Construtor", "Posicional"]
     vals = [p["p_comb"], p["p_cons"], p["p_posi"]]
-    n = len(cats)
 
-    cx, cy = 0.0, 0.0
-    max_r = 100.0
+    fig = go.Figure()
 
-    def pt(idx, r):
-        ang = (math.pi / 2) - (2 * math.pi * idx / n)  # start top, clockwise
-        x = cx + r * math.cos(ang)
-        y = cy + r * math.sin(ang)
-        return x, y
+    # Grid triangular (níveis)
+    grid_levels = [33, 66, 100]
+    for lv in grid_levels:
+        fig.add_trace(go.Scatterpolar(
+            r=[lv, lv, lv, lv],
+            theta=[cats[0], cats[1], cats[2], cats[0]],
+            mode="lines",
+            line=dict(color="rgba(180,190,205,0.30)", width=1),
+            hoverinfo="skip",
+            showlegend=False
+        ))
 
-    # Grid rings (polygon)
-    ring_rows = []
-    levels = [20, 40, 60, 80, 100]
-    for lv in levels:
-        for i in range(n):
-            x, y = pt(i, lv)
-            ring_rows.append({"level": lv, "order": i, "x": x, "y": y})
-        x0, y0 = pt(0, lv)
-        ring_rows.append({"level": lv, "order": n, "x": x0, "y": y0})
+    # Eixos
+    for cat in cats:
+        fig.add_trace(go.Scatterpolar(
+            r=[0, 100],
+            theta=[cat, cat],
+            mode="lines",
+            line=dict(color="rgba(180,190,205,0.35)", width=1),
+            hoverinfo="skip",
+            showlegend=False
+        ))
 
-    # Axis lines + labels
-    axis_rows = []
-    label_rows = []
-    for i, cat in enumerate(cats):
-        x0, y0 = pt(i, 0)
-        x1, y1 = pt(i, 100)
-        axis_rows += [
-            {"axis": cat, "order": 0, "x": x0, "y": y0},
-            {"axis": cat, "order": 1, "x": x1, "y": y1},
-        ]
-        lx, ly = pt(i, 112)
-        label_rows.append({"cat": cat, "x": lx, "y": ly})
+    # Área externa sutil (estética scout)
+    fig.add_trace(go.Scatterpolar(
+        r=[100, 100, 100, 100],
+        theta=[cats[0], cats[1], cats[2], cats[0]],
+        mode="lines",
+        fill="toself",
+        fillcolor="rgba(160,175,205,0.22)",
+        line=dict(color="rgba(120,140,180,0.35)", width=1.2),
+        hoverinfo="skip",
+        showlegend=False
+    ))
 
-    # Player polygon
-    poly_rows = []
-    point_rows = []
-    for i, (cat, val) in enumerate(zip(cats, vals)):
-        x, y = pt(i, val)
-        poly_rows.append({"order": i, "cat": cat, "value": val, "x": x, "y": y})
-        point_rows.append({"cat": cat, "value": val, "x": x, "y": y})
-    x0, y0 = pt(0, vals[0])
-    poly_rows.append({"order": n, "cat": cats[0], "value": vals[0], "x": x0, "y": y0})
+    # Polígono do jogador
+    fig.add_trace(go.Scatterpolar(
+        r=vals + [vals[0]],
+        theta=cats + [cats[0]],
+        mode="lines",
+        fill="toself",
+        fillcolor="rgba(254,215,102,0.20)",
+        line=dict(color="#C9A400", width=2),
+        hovertemplate="%{theta}: <b>%{r}%</b><extra></extra>",
+        showlegend=False
+    ))
 
-    # Radial labels
-    radial_rows = [{"txt": str(lv), "x": 0, "y": lv} for lv in levels]
-
-    ring_df = pd.DataFrame(ring_rows)
-    axis_df = pd.DataFrame(axis_rows)
-    label_df = pd.DataFrame(label_rows)
-    poly_df = pd.DataFrame(poly_rows)
-    point_df = pd.DataFrame(point_rows)
-    radial_df = pd.DataFrame(radial_rows)
-
-    base = alt.Chart().encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-    ).properties(width=size, height=size)
-
-    rings = base.mark_line(color=BORDER, strokeWidth=1).encode(
-        detail="level:N", order="order:Q"
-    ).transform_calculate().properties().interactive(False).transform_filter("datum.level >= 0").encode(
-        x="x:Q", y="y:Q"
-    ).transform_lookup(
-        lookup="level",
-        from_=alt.LookupData(ring_df, "level", ["level", "order", "x", "y"])
+    fig.update_layout(
+        polar=dict(
+            bgcolor="rgba(0,0,0,0)",
+            radialaxis=dict(
+                visible=False,
+                range=[0, 100]
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=18, color="#EAF2FF", family="Inter"),
+                rotation=90,
+                direction="clockwise",
+                gridcolor="rgba(0,0,0,0)",
+                linecolor="rgba(0,0,0,0)"
+            ),
+        ),
+        margin=dict(l=16, r=16, t=8, b=8),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        height=300
     )
-    # Workaround simpler:
-    rings = alt.Chart(ring_df).mark_line(color=BORDER, strokeWidth=1).encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        detail="level:N",
-        order="order:Q"
-    )
-
-    axes = alt.Chart(axis_df).mark_line(color=BORDER, strokeWidth=1.2).encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        detail="axis:N",
-        order="order:Q"
-    )
-
-    axis_labels = alt.Chart(label_df).mark_text(
-        color="#8ca0b8", font="Inter", fontSize=12, fontWeight=600
-    ).encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        text="cat:N"
-    )
-
-    radial_labels = alt.Chart(radial_df).mark_text(
-        color="#617b97", font="Inter", fontSize=10
-    ).encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        text="txt:N"
-    )
-
-    area = alt.Chart(poly_df).mark_area(
-        color=YELLOW, opacity=0.22
-    ).encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        order="order:Q"
-    )
-
-    outline = alt.Chart(poly_df).mark_line(
-        color=YELLOW, strokeWidth=3
-    ).encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        order="order:Q"
-    )
-
-    points = alt.Chart(point_df).mark_circle(
-        size=140, color=YELLOW, stroke=BG, strokeWidth=2
-    ).encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        tooltip=[
-            alt.Tooltip("cat:N", title="Pilar"),
-            alt.Tooltip("value:Q", title="Valor", format=".0f")
-        ]
-    )
-
-    point_values = alt.Chart(point_df).mark_text(
-        dy=-12, color="#d9e7f5", font="Inter", fontSize=11, fontWeight=700
-    ).encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-120, 120]), axis=None),
-        text=alt.Text("value:Q", format=".0f")
-    )
-
-    chart = (rings + axes + radial_labels + area + outline + points + point_values + axis_labels).configure_view(
-        stroke=None
-    ).configure(
-        background="transparent"
-    )
-    return chart
+    return fig
 
 
+def render_profile_radar_card(p):
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(180deg, #001a33 0%, #001529 100%);
+        border: 1px solid rgba(80,120,170,0.35);
+        border-radius: 14px;
+        padding: 14px 16px 8px 16px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    ">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+            <div>
+                <div style="font-size:34px;line-height:1.05;font-weight:700;color:#FFD34D;margin-bottom:2px;">Perfil</div>
+                <div style="font-size:44px;line-height:1;font-weight:800;color:#EAF2FF;">{p["profile"]}</div>
+            </div>
+            <div style="text-align:left;margin-top:2px;">
+                <div style="font-size:34px;line-height:1.15;font-weight:700;color:#FFD34D;">Combativo {p["p_comb"]}%</div>
+                <div style="font-size:34px;line-height:1.15;font-weight:700;color:#FFD34D;">Construtor {p["p_cons"]}%</div>
+                <div style="font-size:34px;line-height:1.15;font-weight:700;color:#FFD34D;">Posicional {p["p_posi"]}%</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    fig = build_clean_triangle_radar(p)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    
 # SIDEBAR
 with st.sidebar:
     st.markdown(
