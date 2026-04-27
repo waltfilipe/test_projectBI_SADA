@@ -1,633 +1,477 @@
 import streamlit as st
 import plotly.graph_objects as go
-import math
 
-# ─── PAGE CONFIG ──────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE CONFIG
+# ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Scout Analytics ⚽",
+    page_title="Scout Intelligence",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ─── CSS ──────────────────────────────────────────────────────────────────────
-st.markdown("""
+# ─────────────────────────────────────────────────────────────────────────────
+# COLOR PALETTE
+# ─────────────────────────────────────────────────────────────────────────────
+BG     = "#0D1B2A"
+RED    = "#FE4A49"
+CYAN   = "#1BE7FF"
+GREEN  = "#31E981"
+YELLOW = "#FED766"
+PURPLE = "#8980F5"
+CARD   = "#0e2038"
+BORDER = "#1a3a5c"
+MUTED  = "#5a7a9a"
+TEXT   = "#c8d8e8"
+DARK   = "#070e18"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GLOBAL CSS
+# ─────────────────────────────────────────────────────────────────────────────
+st.markdown(f"""
 <style>
-html, body,
-[data-testid="stAppViewContainer"],
-[data-testid="stMain"] {
-    background-color: #0D1B2A !important;
-    color: #e2e8f0 !important;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-[data-testid="stSidebar"] {
-    background-color: #091420 !important;
-    border-right: 2px solid #1BE7FF22 !important;
-}
-[data-testid="stSidebar"] p,
-[data-testid="stSidebar"] label,
-[data-testid="stSidebar"] span,
-[data-testid="stSidebar"] div { color: #cbd5e1 !important; }
-.block-container {
-    padding-top: 1.2rem !important;
-    padding-bottom: 1rem !important;
-    max-width: 100% !important;
-}
-.card {
-    background: #112031;
-    border: 1px solid #1BE7FF22;
-    border-radius: 14px;
-    padding: 18px 20px;
-    height: 100%;
-    box-sizing: border-box;
-}
-.player-name { font-size:26px; font-weight:800; color:#1BE7FF; line-height:1.2; }
-.player-pos  { font-size:13px; color:#8980F5; margin-top:2px; font-weight:600; }
-.player-club { font-size:14px; color:#31E981; font-weight:600; margin-top:2px; }
-.info-row    { display:flex; justify-content:space-between; margin-top:10px; gap:8px; }
-.info-cell   { flex:1; background:#0D1B2A; border-radius:8px; padding:8px; text-align:center;
-               border:1px solid #1BE7FF11; }
-.info-cell .ic-label { font-size:10px; color:#8980F5; text-transform:uppercase; letter-spacing:.5px; }
-.info-cell .ic-val   { font-size:14px; font-weight:700; color:#FED766; }
-.stat-row { display:flex; gap:8px; margin-top:12px; }
-.stat-box { flex:1; background:#0D1B2A; border:1px solid #1BE7FF22;
-            border-radius:10px; text-align:center; padding:10px 6px; }
-.stat-box .sv { font-size:24px; font-weight:800; color:#1BE7FF; }
-.stat-box .sl { font-size:10px; color:#8980F5; text-transform:uppercase;
-                letter-spacing:.8px; margin-top:2px; }
-.r-block    { margin-bottom:14px; }
-.r-label    { font-size:10px; color:#8980F5; text-transform:uppercase;
-              letter-spacing:1px; margin-bottom:6px; font-weight:600; }
-.rating-row { display:flex; align-items:center; gap:10px; }
-.r-badge      { font-size:22px; font-weight:900; border-radius:8px;
-                padding:5px 14px; min-width:62px; text-align:center; }
-.r-badge.main { font-size:30px; background:#1BE7FF; color:#0D1B2A; }
-.r-badge.comb { background:#FE4A49; color:#fff; }
-.r-badge.cons { background:#31E981; color:#0D1B2A; }
-.r-badge.posi { background:#8980F5; color:#fff; }
-.rank-tag   { background:#0D1B2A; color:#1BE7FF; border:1px solid #1BE7FF44;
-              border-radius:6px; padding:4px 12px; font-size:13px; font-weight:700; }
-.section-title { font-size:11px; font-weight:700; letter-spacing:1px;
-                 text-transform:uppercase; margin-bottom:8px; }
-.aspect-tag { display:inline-block; background:#0D1B2A; border:1px solid #1BE7FF33;
-              border-radius:6px; padding:4px 10px; font-size:12px;
-              color:#cbd5e1; margin:3px 2px; }
-.attr-wrap   { margin-bottom:13px; }
-.attr-header { display:flex; justify-content:space-between; margin-bottom:4px; }
-.attr-name   { font-size:13px; color:#94a3b8; }
-.attr-val    { font-size:13px; font-weight:700; }
-.bar-bg      { background:#0D1B2A; border-radius:6px; height:10px; overflow:hidden;
-               border:1px solid #1BE7FF11; }
-.bar-fill    { height:10px; border-radius:6px; }
-.profile-label { font-size:11px; color:#8980F5; text-transform:uppercase; letter-spacing:1px; }
-.pct-item    { font-size:13px; margin-bottom:5px; }
-.page-header { color:#1BE7FF; font-size:20px; font-weight:800; letter-spacing:2px;
-               margin-bottom:14px; border-bottom:2px solid #1BE7FF33; padding-bottom:8px; }
-.stButton > button {
-    background:#0D1B2A !important; color:#1BE7FF !important;
-    border:1px solid #1BE7FF44 !important; border-radius:8px !important;
-    font-size:13px !important; transition:all .2s !important;
-}
-.stButton > button:hover {
-    background:#1BE7FF !important; color:#0D1B2A !important;
-    font-weight:700 !important;
-}
-.stSelectbox > div > div,
-.stTextInput > div > div {
-    background:#0D1B2A !important; border:1px solid #1BE7FF33 !important;
-    color:#cbd5e1 !important; border-radius:8px !important;
-}
-.stCheckbox label { color:#cbd5e1 !important; }
-hr { border-color:#1BE7FF22 !important; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+*, *::before, *::after {{
+  font-family: 'Inter', sans-serif !important;
+  box-sizing: border-box;
+}}
+
+/* ── App background ── */
+.stApp {{
+  background-color: {BG};
+  color: {TEXT};
+}}
+
+/* ── Sidebar ── */
+section[data-testid="stSidebar"] {{
+  background: {DARK} !important;
+  border-right: 1px solid {CYAN}22;
+}}
+section[data-testid="stSidebar"] > div {{
+  padding-top: 0 !important;
+}}
+
+/* ── Main layout ── */
+.block-container {{
+  padding: 0.5rem 1rem 1rem !important;
+  max-width: 100% !important;
+}}
+
+/* ── Hide Streamlit chrome ── */
+#MainMenu, footer, header {{ visibility: hidden; }}
+
+/* ── Buttons ── */
+.stButton > button {{
+  background: {CARD};
+  color: {TEXT};
+  border: 1px solid {BORDER};
+  border-radius: 7px;
+  width: 100%;
+  font-size: 0.79rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 0.38rem;
+  transition: all 0.15s ease;
+}}
+.stButton > button:hover {{
+  background: {CYAN}16;
+  border-color: {CYAN};
+  color: {CYAN};
+  box-shadow: 0 0 10px {CYAN}20;
+}}
+
+/* ── Checkboxes ── */
+div[data-testid="stCheckbox"] {{
+  margin-bottom: -0.15rem;
+}}
+div[data-testid="stCheckbox"] label span {{
+  color: {MUTED} !important;
+  font-size: 0.82rem !important;
+}}
+div[data-testid="stCheckbox"] svg {{
+  fill: {CYAN} !important;
+}}
+
+/* ── Text input ── */
+div[data-testid="stTextInput"] input {{
+  background: {DARK} !important;
+  border: 1px solid {BORDER} !important;
+  color: {TEXT} !important;
+  border-radius: 7px !important;
+  font-size: 0.82rem !important;
+}}
+div[data-testid="stTextInput"] input:focus {{
+  border-color: {CYAN} !important;
+  box-shadow: 0 0 0 2px {CYAN}22 !important;
+}}
+
+/* ── Select box ── */
+div[data-testid="stSelectbox"] > div > div {{
+  background: {DARK} !important;
+  border-color: {BORDER} !important;
+  color: {TEXT} !important;
+  border-radius: 7px !important;
+  font-size: 0.82rem !important;
+}}
+
+/* ── Divider ── */
+hr {{
+  border-color: {BORDER};
+  opacity: 0.45;
+  margin: 0.4rem 0;
+}}
+
+/* ── Plotly chart container ── */
+div[data-testid="stPlotlyChart"] {{
+  border-radius: 12px;
+  overflow: hidden;
+}}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {{ width: 5px; }}
+::-webkit-scrollbar-track {{ background: {DARK}; }}
+::-webkit-scrollbar-thumb {{ background: {BORDER}; border-radius: 10px; }}
+
+/* ── Reusable card ── */
+.sc-card {{
+  background: {CARD};
+  border: 1px solid {BORDER};
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  height: 100%;
+}}
+
+/* ── Section title ── */
+.sec-ttl {{
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: {CYAN};
+  padding-bottom: 0.22rem;
+  border-bottom: 1px solid {CYAN}28;
+  margin-bottom: 0.4rem;
+}}
+
+/* ── Aspect row ── */
+.asp {{
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.25rem 0;
+  font-size: 0.77rem;
+  color: {TEXT};
+  border-bottom: 1px solid {BORDER}40;
+}}
+
+/* ── Bar chart ── */
+.bar-lbl {{
+  font-size: 0.7rem;
+  color: {MUTED};
+  margin-bottom: 0.14rem;
+  font-weight: 500;
+}}
+.bar-row {{
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.7rem;
+}}
+.bar-track {{
+  flex: 1;
+  height: 7px;
+  background: {DARK};
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid {BORDER}60;
+}}
+.bar-num {{
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  min-width: 22px;
+  text-align: right;
+}}
+
+/* ── Sidebar label ── */
+.sb-lbl {{
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: {CYAN};
+  margin-bottom: 0.2rem;
+  margin-top: 0.1rem;
+}}
 </style>
 """, unsafe_allow_html=True)
 
-# ─── DATA ─────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# PLAYER DATA
+# ─────────────────────────────────────────────────────────────────────────────
 PLAYERS = {
-    "Adriano Martins": {
-        "club": "Atlético GO", "position": "Zagueiro", "year": 1998, "nationality": "🇧🇷 Brazil",
-        "height": 193, "foot": "Destro", "minutes": 1955, "goals": 2, "assists": 0,
-        "rating": 6.4, "rank": 52,
-        "combativo": 5.8, "combativo_rank": 71,
-        "construtor": 6.9, "construtor_rank": 39,
-        "posicional": 6.8, "posicional_rank": 48,
+    "Adriano Martins (Atlético GO)": {
+        "name": "Adriano Martins", "position": "Zagueiro", "club": "Atlético GO",
+        "year": 1998, "nat": "Brazil", "height": 193, "foot": "Destro",
+        "min": 1955, "goals": 2, "ast": 0,
+        "rtg": 6.4, "rnk": 52,
+        "comb": 5.8, "r_comb": 71,
+        "cons": 6.9, "r_cons": 39,
+        "posi": 6.8, "r_posi": 48,
         "profile": "Híbrido",
-        "pct_combativo": 21, "pct_construtor": 41, "pct_posicional": 39,
-        "construcao": 43, "ofensividade": 77, "um_vs_um": 5, "contencao": 78, "duelo_aereo": 14,
-        "aspect_def": ["❌ Confrontos", "Duelos Aéreos", "🥉 Intervenções"],
-        "aspect_off": ["🥉 Ball Security", "🥉 Progressão"],
-        "aspect_const": ["Passes Verticais", "🥉 PCF*", "❌ Passes Longos"],
+        "p_comb": 21, "p_cons": 41, "p_posi": 39,
+        "def_asp":  [("Confrontos", "X"), ("Duelos Aéreos", "–"), ("Intervenções", "G")],
+        "off_asp":  [("Ball Security", "G"), ("Progressão", "S")],
+        "con_asp":  [("Passes Verticais", "–"), ("PCF*", "G"), ("Passes Longos", "X")],
+        "bars": [
+            ("Construção",      43, YELLOW),
+            ("Ofensividade",    77, GREEN),
+            ("1vs1 – Defensivo", 5, RED),
+            ("Contenção",       78, GREEN),
+            ("Duelo Aéreo",     14, RED),
+        ],
     },
-    "Rafael Sousa": {
-        "club": "Fluminense", "position": "Zagueiro", "year": 1995, "nationality": "🇧🇷 Brazil",
-        "height": 188, "foot": "Destro", "minutes": 2340, "goals": 1, "assists": 2,
-        "rating": 7.1, "rank": 18,
-        "combativo": 7.3, "combativo_rank": 12,
-        "construtor": 6.8, "construtor_rank": 22,
-        "posicional": 7.2, "posicional_rank": 15,
-        "profile": "Combativo",
-        "pct_combativo": 58, "pct_construtor": 22, "pct_posicional": 20,
-        "construcao": 61, "ofensividade": 45, "um_vs_um": 82, "contencao": 88, "duelo_aereo": 79,
-        "aspect_def": ["✅ Confrontos", "✅ Duelos Aéreos", "Intervenções"],
-        "aspect_off": ["Ball Security", "Progressão"],
-        "aspect_const": ["Passes Verticais", "PCF*", "Passes Longos"],
-    },
-    "Lucas Ferreira": {
-        "club": "Grêmio", "position": "Zagueiro", "year": 2000, "nationality": "🇧🇷 Brazil",
-        "height": 185, "foot": "Canhoto", "minutes": 1780, "goals": 0, "assists": 1,
-        "rating": 6.7, "rank": 35,
-        "combativo": 6.2, "combativo_rank": 48,
-        "construtor": 7.1, "construtor_rank": 20,
-        "posicional": 6.5, "posicional_rank": 41,
-        "profile": "Construtor",
-        "pct_combativo": 20, "pct_construtor": 55, "pct_posicional": 25,
-        "construcao": 82, "ofensividade": 65, "um_vs_um": 31, "contencao": 55, "duelo_aereo": 40,
-        "aspect_def": ["Confrontos", "Duelos Aéreos", "🥉 Intervenções"],
-        "aspect_off": ["🥉 Ball Security", "✅ Progressão"],
-        "aspect_const": ["✅ Passes Verticais", "🥉 PCF*", "Passes Longos"],
-    },
-    "Marcos Oliveira": {
-        "club": "Santos FC", "position": "Zagueiro", "year": 1997, "nationality": "🇧🇷 Brazil",
-        "height": 190, "foot": "Destro", "minutes": 2100, "goals": 3, "assists": 0,
-        "rating": 6.9, "rank": 28,
-        "combativo": 6.8, "combativo_rank": 30,
-        "construtor": 6.5, "construtor_rank": 44,
-        "posicional": 7.0, "posicional_rank": 25,
+    "Lucas Henrique (Botafogo)": {
+        "name": "Lucas Henrique", "position": "Volante", "club": "Botafogo",
+        "year": 1997, "nat": "Brazil", "height": 182, "foot": "Destro",
+        "min": 2210, "goals": 0, "ast": 2,
+        "rtg": 7.2, "rnk": 11,
+        "comb": 7.0, "r_comb": 18,
+        "cons": 6.8, "r_cons": 22,
+        "posi": 7.4, "r_posi":  9,
         "profile": "Posicional",
-        "pct_combativo": 25, "pct_construtor": 30, "pct_posicional": 45,
-        "construcao": 55, "ofensividade": 50, "um_vs_um": 60, "contencao": 70, "duelo_aereo": 65,
-        "aspect_def": ["Confrontos", "✅ Duelos Aéreos", "Intervenções"],
-        "aspect_off": ["Ball Security", "Progressão"],
-        "aspect_const": ["Passes Verticais", "PCF*", "🥉 Passes Longos"],
+        "p_comb": 25, "p_cons": 30, "p_posi": 45,
+        "def_asp":  [("Confrontos", "G"), ("Duelos Aéreos", "S"), ("Intervenções", "G")],
+        "off_asp":  [("Ball Security", "S"), ("Progressão", "G")],
+        "con_asp":  [("Passes Verticais", "G"), ("PCF*", "S"), ("Passes Longos", "–")],
+        "bars": [
+            ("Construção",      65, YELLOW),
+            ("Ofensividade",    55, GREEN),
+            ("1vs1 – Defensivo",72, GREEN),
+            ("Contenção",       80, GREEN),
+            ("Duelo Aéreo",     60, YELLOW),
+        ],
     },
-    "Pedro Alves": {
-        "club": "Vasco da Gama", "position": "Zagueiro", "year": 1996, "nationality": "🇧🇷 Brazil",
-        "height": 186, "foot": "Destro", "minutes": 1600, "goals": 1, "assists": 0,
-        "rating": 6.2, "rank": 61,
-        "combativo": 5.5, "combativo_rank": 78,
-        "construtor": 6.4, "construtor_rank": 50,
-        "posicional": 6.5, "posicional_rank": 42,
-        "profile": "Híbrido",
-        "pct_combativo": 28, "pct_construtor": 38, "pct_posicional": 34,
-        "construcao": 50, "ofensividade": 40, "um_vs_um": 22, "contencao": 60, "duelo_aereo": 35,
-        "aspect_def": ["❌ Confrontos", "Duelos Aéreos", "Intervenções"],
-        "aspect_off": ["Ball Security", "Progressão"],
-        "aspect_const": ["Passes Verticais", "PCF*", "❌ Passes Longos"],
-    },
-    "Diego Nascimento": {
-        "club": "Sport Recife", "position": "Zagueiro", "year": 2001, "nationality": "🇧🇷 Brazil",
-        "height": 182, "foot": "Canhoto", "minutes": 1200, "goals": 0, "assists": 1,
-        "rating": 6.0, "rank": 68,
-        "combativo": 5.7, "combativo_rank": 73,
-        "construtor": 6.2, "construtor_rank": 59,
-        "posicional": 6.0, "posicional_rank": 65,
-        "profile": "Construtor",
-        "pct_combativo": 18, "pct_construtor": 52, "pct_posicional": 30,
-        "construcao": 75, "ofensividade": 60, "um_vs_um": 15, "contencao": 48, "duelo_aereo": 20,
-        "aspect_def": ["Confrontos", "❌ Duelos Aéreos", "Intervenções"],
-        "aspect_off": ["🥉 Ball Security", "🥉 Progressão"],
-        "aspect_const": ["✅ Passes Verticais", "PCF*", "Passes Longos"],
-    },
-    "Thiago Campos": {
-        "club": "Ceará SC", "position": "Zagueiro", "year": 1999, "nationality": "🇧🇷 Brazil",
-        "height": 191, "foot": "Destro", "minutes": 2250, "goals": 2, "assists": 0,
-        "rating": 6.6, "rank": 40,
-        "combativo": 6.5, "combativo_rank": 45,
-        "construtor": 6.3, "construtor_rank": 55,
-        "posicional": 6.8, "posicional_rank": 32,
-        "profile": "Posicional",
-        "pct_combativo": 30, "pct_construtor": 28, "pct_posicional": 42,
-        "construcao": 48, "ofensividade": 52, "um_vs_um": 55, "contencao": 72, "duelo_aereo": 68,
-        "aspect_def": ["Confrontos", "✅ Duelos Aéreos", "🥉 Intervenções"],
-        "aspect_off": ["Ball Security", "Progressão"],
-        "aspect_const": ["Passes Verticais", "🥉 PCF*", "Passes Longos"],
-    },
-    "Bruno Lima": {
-        "club": "Fortaleza EC", "position": "Zagueiro", "year": 1994, "nationality": "🇧🇷 Brazil",
-        "height": 195, "foot": "Destro", "minutes": 2700, "goals": 4, "assists": 1,
-        "rating": 7.3, "rank": 8,
-        "combativo": 7.5, "combativo_rank": 5,
-        "construtor": 6.9, "construtor_rank": 21,
-        "posicional": 7.0, "posicional_rank": 22,
+    "Gustavo Nunes (Grêmio)": {
+        "name": "Gustavo Nunes", "position": "Extremo Direito", "club": "Grêmio",
+        "year": 2003, "nat": "Brazil", "height": 175, "foot": "Esquerdo",
+        "min": 1840, "goals": 6, "ast": 5,
+        "rtg": 7.5, "rnk": 7,
+        "comb": 6.9, "r_comb": 20,
+        "cons": 7.0, "r_cons": 15,
+        "posi": 7.8, "r_posi":  4,
         "profile": "Combativo",
-        "pct_combativo": 62, "pct_construtor": 20, "pct_posicional": 18,
-        "construcao": 55, "ofensividade": 40, "um_vs_um": 90, "contencao": 92, "duelo_aereo": 88,
-        "aspect_def": ["✅ Confrontos", "✅ Duelos Aéreos", "✅ Intervenções"],
-        "aspect_off": ["Ball Security", "Progressão"],
-        "aspect_const": ["Passes Verticais", "PCF*", "❌ Passes Longos"],
-    },
-    "Gustavo Pereira": {
-        "club": "Botafogo", "position": "Zagueiro", "year": 2002, "nationality": "🇧🇷 Brazil",
-        "height": 184, "foot": "Canhoto", "minutes": 900, "goals": 0, "assists": 0,
-        "rating": 5.8, "rank": 75,
-        "combativo": 5.3, "combativo_rank": 76,
-        "construtor": 6.0, "construtor_rank": 67,
-        "posicional": 5.9, "posicional_rank": 71,
-        "profile": "Híbrido",
-        "pct_combativo": 33, "pct_construtor": 33, "pct_posicional": 34,
-        "construcao": 40, "ofensividade": 35, "um_vs_um": 30, "contencao": 45, "duelo_aereo": 25,
-        "aspect_def": ["❌ Confrontos", "Duelos Aéreos", "Intervenções"],
-        "aspect_off": ["Ball Security", "Progressão"],
-        "aspect_const": ["Passes Verticais", "❌ PCF*", "Passes Longos"],
-    },
-    "André Rocha": {
-        "club": "Athletico-PR", "position": "Zagueiro", "year": 1993, "nationality": "🇧🇷 Brazil",
-        "height": 189, "foot": "Destro", "minutes": 2500, "goals": 1, "assists": 3,
-        "rating": 7.0, "rank": 22,
-        "combativo": 6.9, "combativo_rank": 25,
-        "construtor": 7.3, "construtor_rank": 11,
-        "posicional": 6.9, "posicional_rank": 28,
-        "profile": "Construtor",
-        "pct_combativo": 22, "pct_construtor": 58, "pct_posicional": 20,
-        "construcao": 88, "ofensividade": 72, "um_vs_um": 45, "contencao": 65, "duelo_aereo": 50,
-        "aspect_def": ["Confrontos", "Duelos Aéreos", "🥉 Intervenções"],
-        "aspect_off": ["🥉 Ball Security", "✅ Progressão"],
-        "aspect_const": ["✅ Passes Verticais", "✅ PCF*", "🥉 Passes Longos"],
+        "p_comb": 48, "p_cons": 28, "p_posi": 24,
+        "def_asp":  [("Confrontos", "S"), ("Duelos Aéreos", "–"), ("Intervenções", "–")],
+        "off_asp":  [("Ball Security", "G"), ("Progressão", "G")],
+        "con_asp":  [("Passes Verticais", "G"), ("PCF*", "–"), ("Passes Longos", "S")],
+        "bars": [
+            ("Construção",      55, YELLOW),
+            ("Ofensividade",    91, GREEN),
+            ("1vs1 – Defensivo",38, YELLOW),
+            ("Contenção",       42, YELLOW),
+            ("Duelo Aéreo",     31, RED),
+        ],
     },
 }
 
-PROFILE_COLORS = {
-    "Combativo": "#FE4A49",
-    "Construtor": "#31E981",
-    "Posicional": "#8980F5",
-    "Híbrido":    "#FED766",
-}
-PROFILE_TEXT_DARK = {"Construtor", "Híbrido"}
-LEAGUE_AVG = {
-    "construcao": 55, "ofensividade": 52,
-    "um_vs_um": 50,   "contencao": 58, "duelo_aereo": 54
-}
+# ─────────────────────────────────────────────────────────────────────────────
+# HELPER FUNCTIONS
+# ─────────────────────────────────────────────────────────────────────────────
+def icon_html(k: str) -> str:
+    if k == "X":  return f'<span style="color:{RED};font-weight:800;font-size:0.82rem;">✕</span>'
+    if k == "G":  return '<span style="font-size:0.88rem;">🥇</span>'
+    if k == "S":  return '<span style="font-size:0.88rem;">🥈</span>'
+    return f'<span style="color:{BORDER};font-size:0.88rem;">─</span>'
 
-# ─── STATE — inicializa UMA única vez ────────────────────────────────────────
-# ✅ FIX 1: session_state só é escrito quando o valor realmente muda,
-#            evitando o loop de rerun que causava o carregamento infinito.
-if "selected_player" not in st.session_state:
-    st.session_state["selected_player"] = list(PLAYERS.keys())[0]
-
-# ─── HELPERS ──────────────────────────────────────────────────────────────────
-def tags_html(items):
-    return "".join(f'<span class="aspect-tag">{i}</span>' for i in items)
-
-def attr_bar(label, value):
-    color = "#31E981" if value >= 70 else ("#FED766" if value >= 40 else "#FE4A49")
+def rating_block(label: str, value, rank: int, bg: str, fg: str = "#fff") -> str:
     return f"""
-    <div class="attr-wrap">
-      <div class="attr-header">
-        <span class="attr-name">{label}</span>
-        <span class="attr-val" style="color:{color}">{value}</span>
-      </div>
-      <div class="bar-bg">
-        <div class="bar-fill" style="background:{color};width:{value}%"></div>
+    <div style="background:{DARK};border:1px solid {BORDER};border-radius:8px;
+         padding:0.46rem 0.7rem;margin-bottom:0.42rem;">
+      <div style="font-size:0.58rem;font-weight:600;letter-spacing:0.13em;
+                  text-transform:uppercase;color:{MUTED};">{label}</div>
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.16rem;">
+        <div style="background:{bg};color:{fg};border-radius:5px;padding:0.07rem 0.55rem;
+             font-size:1.18rem;font-weight:800;letter-spacing:-0.01em;">{value}</div>
+        <div style="font-size:0.85rem;font-weight:700;color:{MUTED};">#{rank}</div>
       </div>
     </div>"""
 
-def hex_to_rgb(h):
-    h = h.lstrip("#")
-    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+def aspect_section(title: str, items: list) -> str:
+    rows = "".join(f'<div class="asp">{icon_html(v)}<span>{k}</span></div>' for k, v in items)
+    return f'<div class="sec-ttl">{title}</div>{rows}'
 
-def polar_to_xy(values, angles, max_val=100):
-    xs = [(v / max_val) * math.cos(a) for v, a in zip(values, angles)]
-    ys = [(v / max_val) * math.sin(a) for v, a in zip(values, angles)]
-    xs.append(xs[0])
-    ys.append(ys[0])
-    return xs, ys
+def bar_block(label: str, value: int, color: str) -> str:
+    pct = min(max(value, 0), 100)
+    return f"""
+    <div>
+      <div class="bar-lbl">{label}</div>
+      <div class="bar-row">
+        <div class="bar-track">
+          <div style="height:100%;width:{pct}%;background:{color};border-radius:3px;
+               box-shadow:0 0 6px {color}55;"></div>
+        </div>
+        <div class="bar-num">{value}</div>
+      </div>
+    </div>"""
 
-# ✅ FIX 2: @st.cache_data evita recalcular o radar a cada interação.
-#            O gráfico só é reconstruído quando player_name ou pc muda.
-@st.cache_data
-def build_radar(player_name, pc,
-                construcao, ofensividade, um_vs_um, contencao, duelo_aereo):
-    cats   = ["Construção", "Ofensividade", "1vs1 Def.", "Contenção", "Duelo Aéreo"]
-    vals   = [construcao, ofensividade, um_vs_um, contencao, duelo_aereo]
-    avg    = [LEAGUE_AVG["construcao"], LEAGUE_AVG["ofensividade"],
-              LEAGUE_AVG["um_vs_um"],   LEAGUE_AVG["contencao"], LEAGUE_AVG["duelo_aereo"]]
-    n      = len(cats)
-    angles = [math.pi / 2 - 2 * math.pi * i / n for i in range(n)]
-    r, g, b = hex_to_rgb(pc)
+def build_radar(p: dict) -> go.Figure:
+    cats   = ["Combativo", "Construtor", "Posicional"]
+    vals   = [p["p_comb"], p["p_cons"], p["p_posi"]]
+    colors = [RED, GREEN, CYAN]
 
     fig = go.Figure()
 
-    # anéis de fundo
-    for ring_val, fill_color in [
-        (100, "rgba(27,231,255,0.02)"),
-        (75,  "rgba(27,231,255,0.04)"),
-        (50,  "rgba(27,231,255,0.055)"),
-        (25,  "rgba(27,231,255,0.07)"),
-    ]:
-        rx, ry = polar_to_xy([ring_val] * n, angles)
-        fig.add_trace(go.Scatter(
-            x=rx, y=ry, mode="lines", fill="toself",
-            fillcolor=fill_color,
-            line=dict(color="rgba(27,231,255,0.12)", width=0.8),
-            hoverinfo="skip", showlegend=False,
-        ))
-
-    # linhas de eixo
-    for a in angles:
-        fig.add_trace(go.Scatter(
-            x=[0, math.cos(a)], y=[0, math.sin(a)],
+    # Concentric triangle grid
+    for ring in [20, 40, 60, 80, 100]:
+        fig.add_trace(go.Scatterpolar(
+            r=[ring] * 3 + [ring],
+            theta=cats + [cats[0]],
             mode="lines",
-            line=dict(color="rgba(27,231,255,0.15)", width=0.8),
-            hoverinfo="skip", showlegend=False,
+            line=dict(color=BORDER, width=0.75),
+            fill=None, showlegend=False, hoverinfo="skip",
         ))
 
-    # ticks numéricos
-    top_angle = math.pi / 2
-    for tick in [25, 50, 75, 100]:
-        fig.add_annotation(
-            x=(tick / 100) * math.cos(top_angle) + 0.03,
-            y=(tick / 100) * math.sin(top_angle),
-            text=str(tick), showarrow=False,
-            font=dict(color="rgba(27,231,255,0.40)", size=8),
-            xanchor="left",
-        )
+    # Axis lines from center
+    for cat in cats:
+        fig.add_trace(go.Scatterpolar(
+            r=[0, 100], theta=[cat, cat],
+            mode="lines",
+            line=dict(color=BORDER, width=1),
+            showlegend=False, hoverinfo="skip",
+        ))
 
-    # média da liga
-    ax, ay = polar_to_xy(avg, angles)
-    fig.add_trace(go.Scatter(
-        x=ax, y=ay, mode="lines", fill="toself",
-        fillcolor="rgba(137,128,245,0.10)",
-        line=dict(color="#8980F5", width=1.8, dash="dot"),
-        name="Média Liga", hoverinfo="skip",
-    ))
+    # Individual axis dots (max value markers)
+    for cat, col in zip(cats, colors):
+        fig.add_trace(go.Scatterpolar(
+            r=[100], theta=[cat],
+            mode="markers",
+            marker=dict(size=5, color=col, opacity=0.6),
+            showlegend=False, hoverinfo="skip",
+        ))
 
-    # polígono do jogador
-    vx, vy = polar_to_xy(vals, angles)
-    fig.add_trace(go.Scatter(
-        x=vx, y=vy, mode="lines+markers", fill="toself",
-        fillcolor=f"rgba({r},{g},{b},0.22)",
-        line=dict(color=pc, width=3),
-        marker=dict(size=9, color=pc, line=dict(color="#0D1B2A", width=2)),
-        name=player_name, hoverinfo="skip",
-    ))
-
-    # pontos com hover
-    hover_x = [(v / 100) * math.cos(a) for v, a in zip(vals, angles)]
-    hover_y = [(v / 100) * math.sin(a) for v, a in zip(vals, angles)]
-    fig.add_trace(go.Scatter(
-        x=hover_x, y=hover_y, mode="markers",
-        marker=dict(size=10, color=pc, line=dict(color="#0D1B2A", width=2)),
-        text=[f"<b>{c}</b>: {v}" for c, v in zip(cats, vals)],
-        hovertemplate="%{text}<extra></extra>",
+    # Player polygon
+    fig.add_trace(go.Scatterpolar(
+        r=vals + [vals[0]],
+        theta=cats + [cats[0]],
+        fill="toself",
+        fillcolor=YELLOW + "28",
+        line=dict(color=YELLOW, width=2.2),
+        mode="lines+markers",
+        marker=dict(
+            size=7, color=YELLOW,
+            line=dict(color=BG, width=1.5),
+        ),
         showlegend=False,
+        hovertemplate="%{theta}: <b>%{r}%</b><extra></extra>",
     ))
-
-    # labels
-    label_r = 1.25
-    for cat, val, a in zip(cats, vals, angles):
-        color_val = "#31E981" if val >= 70 else ("#FED766" if val >= 40 else "#FE4A49")
-        fig.add_annotation(
-            x=label_r * math.cos(a), y=label_r * math.sin(a),
-            text=f"<span style='font-size:11px;color:#cbd5e1'><b>{cat}</b></span>"
-                 f"<br><span style='color:{color_val};font-size:13px'><b>{val}</b></span>",
-            showarrow=False, align="center", font=dict(size=11),
-        )
 
     fig.update_layout(
-        xaxis=dict(visible=False, range=[-1.55, 1.55], fixedrange=True),
-        yaxis=dict(visible=False, range=[-1.55, 1.55], fixedrange=True, scaleanchor="x"),
+        polar=dict(
+            bgcolor="rgba(0,0,0,0)",
+            radialaxis=dict(visible=False, range=[0, 100]),
+            angularaxis=dict(
+                tickfont=dict(size=10, color="#8ca0b8", family="Inter"),
+                gridcolor=BORDER,
+                linecolor=BORDER,
+                rotation=90,
+                direction="counterclockwise",
+            ),
+        ),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        showlegend=True,
-        legend=dict(
-            orientation="h", x=0.5, xanchor="center", y=-0.02,
-            font=dict(color="#94a3b8", size=11),
-            bgcolor="rgba(0,0,0,0)",
-        ),
-        margin=dict(t=10, b=30, l=10, r=10),
-        height=400,
+        margin=dict(l=40, r=40, t=20, b=20),
+        height=255,
+        showlegend=False,
     )
     return fig
 
-# ─── SIDEBAR ──────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# SIDEBAR
+# ─────────────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown(
-        '<p style="color:#1BE7FF;font-size:18px;font-weight:800;'
-        'letter-spacing:2px;margin:0">⚽ SCOUT ANALYTICS</p>',
-        unsafe_allow_html=True
-    )
+    st.markdown(f"""
+    <div style="text-align:center;padding:0.9rem 0 0.5rem;">
+      <div style="font-size:2rem;line-height:1;">⚽</div>
+      <div style="font-size:0.56rem;letter-spacing:0.26em;color:{CYAN};
+                  font-weight:700;text-transform:uppercase;margin-top:0.25rem;">
+        Scout Intelligence
+      </div>
+    </div>""", unsafe_allow_html=True)
     st.divider()
 
-    st.markdown(
-        '<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;'
-        'text-transform:uppercase;margin-bottom:6px">Filtrar Perfil</p>',
-        unsafe_allow_html=True
-    )
-    f_combativo  = st.checkbox("⚡ Combativo")
-    f_construtor = st.checkbox("🔧 Construtor")
-    f_hibrido    = st.checkbox("🔀 Híbrido")
-    f_posicional = st.checkbox("📍 Posicional")
+    st.markdown(f'<div class="sb-lbl">Perfil</div>', unsafe_allow_html=True)
+    st.checkbox("Combativo",  key="f_comb",  value=False)
+    st.checkbox("Construtor", key="f_cons",  value=False)
+    st.checkbox("Híbrido",    key="f_hibr",  value=True)
+    st.checkbox("Posicional", key="f_posi",  value=False)
+    st.divider()
+
+    st.markdown(f'<div class="sb-lbl">Jogadores</div>', unsafe_allow_html=True)
+    st.text_input("", placeholder="🔍  Buscar jogador...",
+                  label_visibility="collapsed", key="search")
+    player_key = st.selectbox("", list(PLAYERS.keys()),
+                               label_visibility="collapsed", key="player_sel")
+    st.divider()
+
+    st.markdown(f'<div class="sb-lbl">Navegação</div>', unsafe_allow_html=True)
+    for pos in ["Zagueiros", "Laterais", "Meio-campistas",
+                "Extremos", "Meias Ofensivos", "Atacantes"]:
+        st.button(pos, key=f"nav_{pos}")
 
     st.divider()
-    st.markdown(
-        '<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;'
-        'text-transform:uppercase;margin-bottom:6px">Jogadores</p>',
-        unsafe_allow_html=True
-    )
-    search = st.text_input("", placeholder="🔍 Buscar jogador...", label_visibility="collapsed")
-
-    all_names = list(PLAYERS.keys())
-    active_profiles = (
-        (["Combativo"]  if f_combativo  else []) +
-        (["Construtor"] if f_construtor else []) +
-        (["Híbrido"]    if f_hibrido    else []) +
-        (["Posicional"] if f_posicional else [])
-    )
-    filtered = [
-        n for n in all_names
-        if (not search
-            or search.lower() in n.lower()
-            or search.lower() in PLAYERS[n]["club"].lower())
-        and (not active_profiles or PLAYERS[n]["profile"] in active_profiles)
-    ]
-    if not filtered:
-        filtered = all_names
-
-    display_names = [f"{n} ({PLAYERS[n]['club']})" for n in filtered]
-    cur         = st.session_state["selected_player"]
-    default_idx = filtered.index(cur) if cur in filtered else 0
-
-    chosen = st.selectbox("", display_names, index=default_idx, label_visibility="collapsed")
-    new_selection = filtered[display_names.index(chosen)]
-
-    # ✅ FIX 1 aplicado: só escreve no session_state se o valor mudou
-    if new_selection != st.session_state["selected_player"]:
-        st.session_state["selected_player"] = new_selection
-        st.rerun()
-
-    selected_player = st.session_state["selected_player"]
-
-    st.divider()
-    st.markdown(
-        '<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;'
-        'text-transform:uppercase;margin-bottom:6px">Navegação</p>',
-        unsafe_allow_html=True
-    )
-    for nav in ["🛡️ Zagueiros", "🏃 Laterais", "⚙️ Meio-campistas",
-                "💨 Extremos", "🎯 Meias Ofensivos", "⚡ Atacantes"]:
-        st.button(nav, use_container_width=True, key=f"nav_{nav}")
-
-    st.divider()
-    st.markdown(
-        '<p style="color:#475569;font-size:12px">👥 Jogadores Analisados: '
-        '<span style="color:#1BE7FF;font-weight:700">78</span></p>',
-        unsafe_allow_html=True
-    )
-
-# ─── MAIN ─────────────────────────────────────────────────────────────────────
-p  = PLAYERS[selected_player]
-pc = PROFILE_COLORS.get(p["profile"], "#1BE7FF")
-text_on_badge = "#0D1B2A" if p["profile"] in PROFILE_TEXT_DARK else "#ffffff"
-
-st.markdown(
-    f'<div class="page-header">📊 ANÁLISE DE JOGADORES — {p["position"].upper()}S</div>',
-    unsafe_allow_html=True
-)
-
-col1, col2, col3 = st.columns([2, 2, 3], gap="medium")
-
-with col1:
     st.markdown(f"""
-    <div class="card">
-      <div class="player-name">{selected_player}</div>
-      <div class="player-pos">{p['position']}</div>
-      <div class="player-club">{p['club']}</div>
-      <div class="info-row">
-        <div class="info-cell"><div class="ic-label">Ano</div><div class="ic-val">{p['year']}</div></div>
-        <div class="info-cell"><div class="ic-label">Nac.</div><div class="ic-val">{p['nationality']}</div></div>
-      </div>
-      <div class="info-row">
-        <div class="info-cell"><div class="ic-label">Altura</div><div class="ic-val">{p['height']} cm</div></div>
-        <div class="info-cell"><div class="ic-label">Pé Dom.</div><div class="ic-val">{p['foot']}</div></div>
-      </div>
-      <div class="stat-row">
-        <div class="stat-box" style="flex:2"><div class="sv">{p['minutes']}</div><div class="sl">Minutagem</div></div>
-        <div class="stat-box"><div class="sv">{p['goals']}</div><div class="sl">Gols</div></div>
-        <div class="stat-box"><div class="sv">{p['assists']}</div><div class="sl">Assist.</div></div>
-      </div>
-      <div style="margin-top:14px;text-align:center">
-        <span style="background:{pc};color:{text_on_badge};font-weight:800;font-size:13px;
-                     border-radius:20px;padding:5px 20px;letter-spacing:1px">
-          {p['profile']}
-        </span>
-      </div>
+    <div style="display:flex;justify-content:space-around;padding:0.25rem 0;font-size:1.1rem;">
+      <span title="Início" style="cursor:pointer;opacity:0.8;">🏠</span>
+      <span title="Ajuda"  style="cursor:pointer;opacity:0.8;">❓</span>
+      <span title="Busca"  style="cursor:pointer;opacity:0.8;">🔍</span>
+      <span title="Stats"  style="cursor:pointer;opacity:0.8;">📊</span>
     </div>
-    """, unsafe_allow_html=True)
+    <div style="margin-top:0.9rem;text-align:center;font-size:0.6rem;color:{MUTED};">
+      Jogadores Analisados &nbsp;
+      <span style="color:{CYAN};font-weight:700;font-size:0.7rem;">78</span>
+    </div>""", unsafe_allow_html=True)
 
-with col2:
+# ─────────────────────────────────────────────────────────────────────────────
+# LOAD SELECTED PLAYER
+# ─────────────────────────────────────────────────────────────────────────────
+p = PLAYERS[player_key]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HEADER BAR
+# ─────────────────────────────────────────────────────────────────────────────
+st.markdown(f"""
+<div style="background:{DARK};border-bottom:1px solid {CYAN}18;
+     padding:0.38rem 0.2rem;display:flex;justify-content:space-between;
+     align-items:center;margin-bottom:0.75rem;">
+  <div style="display:flex;align-items:center;gap:0.5rem;">
+    <span style="font-size:0.72rem;">⚽</span>
+    <span style="font-size:0.58rem;letter-spacing:0.2em;color:{CYAN};
+                 font-weight:700;text-transform:uppercase;">Scout Intelligence Platform</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:1.2rem;">
+    <span style="font-size:0.58rem;color:{MUTED};">Temporada 2025/26</span>
+    <span style="font-size:0.58rem;color:{MUTED};">Brasileirão Série A</span>
+    <div style="width:6px;height:6px;border-radius:50%;background:{GREEN};
+         box-shadow:0 0 6px {GREEN};"></div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MAIN COLUMNS
+# ─────────────────────────────────────────────────────────────────────────────
+c1, c2, c3, c4, c5 = st.columns([2.05, 1.55, 2.1, 1.75, 2.0], gap="small")
+
+# ═══════════════════════════════════════
+# C1 — PLAYER CARD
+# ═══════════════════════════════════════
+with c1:
     st.markdown(f"""
-    <div class="card">
-      <div class="r-block">
-        <div class="r-label">⭐ RATING GERAL <span style="color:#1BE7FF44;font-size:9px">(Rank)</span></div>
-        <div class="rating-row">
-          <div class="r-badge main">{p['rating']}</div>
-          <div class="rank-tag">#{p['rank']}</div>
-        </div>
-      </div>
-      <div style="background:#0D1B2A;border-radius:10px;padding:14px;border:1px solid #1BE7FF11">
-        <div class="r-block">
-          <div class="r-label">⚡ COMBATIVO</div>
-          <div class="rating-row">
-            <div class="r-badge comb">{p['combativo']}</div>
-            <div class="rank-tag">#{p['combativo_rank']}</div>
-          </div>
-        </div>
-        <div class="r-block">
-          <div class="r-label">🔧 CONSTRUTOR</div>
-          <div class="rating-row">
-            <div class="r-badge cons">{p['construtor']}</div>
-            <div class="rank-tag">#{p['construtor_rank']}</div>
-          </div>
-        </div>
-        <div class="r-block" style="margin-bottom:0">
-          <div class="r-label">📍 POSICIONAL</div>
-          <div class="rating-row">
-            <div class="r-badge posi">{p['posicional']}</div>
-            <div class="rank-tag">#{p['posicional_rank']}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
+    <div class="sc-card">
 
-with col3:
-    st.markdown(f"""
-    <div class="card">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px">
-        <div>
-          <div class="section-title" style="color:#FE4A49">⚔️ Aspectos Defensivos</div>
-          {tags_html(p['aspect_def'])}
-        </div>
-        <div>
-          <div class="section-title" style="color:#31E981">🚀 Aspectos Ofensivos</div>
-          {tags_html(p['aspect_off'])}
-        </div>
-      </div>
-      <div style="border-top:1px solid #1BE7FF22;padding-top:14px">
-        <div class="section-title" style="color:#1BE7FF">🔧 Aspectos de Construção</div>
-        {tags_html(p['aspect_const'])}
-        <div style="font-size:10px;color:#475569;margin-top:8px">*PCF = Passes Construtores Finais</div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
-col4, col5 = st.columns([3, 2], gap="medium")
-
-with col4:
-    st.markdown(f"""
-    <div class="card" style="margin-bottom:8px">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div class="profile-label">Perfil Identificado</div>
-          <div style="font-size:22px;font-weight:800;color:{pc}">{p['profile']}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="pct-item" style="color:#FE4A49">⚡ Combativo &nbsp;<b>{p['pct_combativo']}%</b></div>
-          <div class="pct-item" style="color:#31E981">🔧 Construtor &nbsp;<b>{p['pct_construtor']}%</b></div>
-          <div class="pct-item" style="color:#8980F5">📍 Posicional &nbsp;<b>{p['pct_posicional']}%</b></div>
-        </div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ✅ FIX 2 aplicado: parâmetros primitivos para o cache funcionar corretamente
-    fig = build_radar(
-        selected_player, pc,
-        p["construcao"], p["ofensividade"], p["um_vs_um"],
-        p["contencao"],  p["duelo_aereo"]
-    )
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-
-with col5:
-    bars = (
-        attr_bar("Construção",       p["construcao"])   +
-        attr_bar("Ofensividade",     p["ofensividade"]) +
-        attr_bar("1vs1 – Defensivo", p["um_vs_um"])     +
-        attr_bar("Contenção",        p["contencao"])    +
-        attr_bar("Duelo Aéreo",      p["duelo_aereo"])
-    )
-    st.markdown(f"""
-    <div class="card">
-      <div class="section-title" style="color:#1BE7FF;margin-bottom:18px;font-size:12px;letter-spacing:1px">
-        📊 ATRIBUTOS FÍSICO-TÁTICOS
-      </div>
-      {bars}
-      <div style="margin-top:16px;padding-top:12px;border-top:1px solid #1BE7FF11">
-        <div style="font-size:10px;color:#475569;margin-bottom:6px;letter-spacing:.5px">LEGENDA</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <span style="font-size:11px;color:#31E981">● ≥ 70 Excelente</span>
-          <span style="font-size:11px;color:#FED766">● ≥ 40 Médio</span>
-          <span style="font-size:11px;color:#FE4A49">● &lt; 40 Abaixo</span>
-        </div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
-st.markdown(
-    '<div style="text-align:center;color:#1BE7FF22;font-size:12px;letter-spacing:1px">'
-    '⚽ Scout Analytics · Dados da Temporada 2025 · 78 Jogadores Analisados'
-    '</div>',
-    unsafe_allow_html=True,
-)
+      <!-- Avatar placeholder -->
+      <div style="text-align:center;margin-bottom:0.75rem;">
+        <div style="display:inline-flex;align-items:center;justify-content:center;
+             width:74px;height:74px;border*
