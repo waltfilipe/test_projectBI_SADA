@@ -22,9 +22,37 @@ MUTED  = "#5a7a9a"
 TEXT   = "#c8d8e8"
 DARK   = "#070e18"
 
-# rgba helpers — Plotly requires rgba() not 8-digit hex
 YELLOW_FILL = "rgba(254,215,102,0.18)"
-CYAN_FILL   = "rgba(27,231,255,0.08)"
+
+
+# RATING → gradient color
+# 0–5: dark red → orange
+# 5–8: orange → dark green
+# 8–10: dark green → dark blue
+def rating_color(val):
+    try:
+        v = float(val)
+    except Exception:
+        return "#3a3a5a"
+    if v <= 5.0:
+        t = v / 5.0
+        r = int(120 + (200 - 120) * (1 - t))
+        g = int(20  + (60  - 20)  * t)
+        b = int(20  + (20  - 20)  * t)
+        return "rgb(" + str(r) + "," + str(g) + "," + str(b) + ")"
+    elif v <= 8.0:
+        t = (v - 5.0) / 3.0
+        r = int(200 - (200 - 20)  * t)
+        g = int(60  + (130 - 60)  * t)
+        b = int(20  + (60  - 20)  * t)
+        return "rgb(" + str(r) + "," + str(g) + "," + str(b) + ")"
+    else:
+        t = (v - 8.0) / 2.0
+        r = int(20  - (20  - 10)  * t)
+        g = int(130 - (130 - 60)  * t)
+        b = int(60  + (160 - 60)  * t)
+        return "rgb(" + str(r) + "," + str(g) + "," + str(b) + ")"
+
 
 # PLAYER DATA
 PLAYERS = {
@@ -78,7 +106,7 @@ PLAYERS = {
     },
 }
 
-# CSS — plain string with token replacement (no f-strings, no {{ }})
+# CSS
 CSS_TEMPLATE = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -99,13 +127,14 @@ section[data-testid="stSidebar"] > div {
     padding-top: 0 !important;
 }
 .block-container {
-    padding: 0.5rem 1rem 1rem !important;
+    padding: 0.4rem 1rem 1rem !important;
     max-width: 100% !important;
 }
 #MainMenu, footer, header {
     visibility: hidden;
 }
-.stButton > button {
+/* Navigation buttons — centered */
+div[data-testid="stSidebar"] .stButton > button {
     background: CARD_COLOR;
     color: TEXT_COLOR;
     border: 1px solid BORDER_COLOR;
@@ -114,11 +143,15 @@ section[data-testid="stSidebar"] > div {
     font-size: 0.79rem;
     font-weight: 500;
     letter-spacing: 0.04em;
-    padding: 0.38rem;
+    padding: 0.38rem 0.2rem;
     transition: all 0.15s ease;
     margin-bottom: 2px;
+    text-align: center !important;
+    justify-content: center !important;
+    display: flex !important;
+    align-items: center !important;
 }
-.stButton > button:hover {
+div[data-testid="stSidebar"] .stButton > button:hover {
     background: rgba(27,231,255,0.07);
     border-color: CYAN_COLOR;
     color: CYAN_COLOR;
@@ -160,7 +193,6 @@ css = css.replace("CYAN_COLOR",   CYAN)
 css = css.replace("CARD_COLOR",   CARD)
 css = css.replace("BORDER_COLOR", BORDER)
 css = css.replace("MUTED_COLOR",  MUTED)
-
 st.markdown(css, unsafe_allow_html=True)
 
 
@@ -176,42 +208,60 @@ def icon_html(k):
     return '<span style="color:' + BORDER + ';font-size:0.88rem;">-</span>'
 
 
-def rating_pill(label, value, rank, pill_color):
+def section_title(label):
+    h  = '<div style="font-size:0.58rem;font-weight:700;letter-spacing:0.16em;'
+    h += 'text-transform:uppercase;color:' + CYAN + ';padding-bottom:0.2rem;'
+    h += 'border-bottom:1px solid rgba(27,231,255,0.25);margin-bottom:0.4rem;">' + label + '</div>'
+    return h
+
+
+def rating_pill(label, value, rank):
+    col = rating_color(value)
     h  = '<div style="background:' + DARK + ';border:1px solid ' + BORDER + ';border-radius:8px;'
-    h += 'padding:0.42rem 0.65rem;margin-bottom:0.38rem;">'
-    h += '<div style="font-size:0.56rem;font-weight:600;letter-spacing:0.13em;'
+    h += 'padding:0.38rem 0.6rem;margin-bottom:0.32rem;">'
+    h += '<div style="font-size:0.54rem;font-weight:600;letter-spacing:0.12em;'
     h += 'text-transform:uppercase;color:' + MUTED + ';">' + str(label) + '</div>'
-    h += '<div style="display:flex;align-items:center;gap:0.45rem;margin-top:0.14rem;">'
-    h += '<div style="background:' + pill_color + ';color:#fff;border-radius:5px;'
-    h += 'padding:0.05rem 0.5rem;font-size:1.15rem;font-weight:800;">' + str(value) + '</div>'
-    h += '<div style="font-size:0.8rem;font-weight:700;color:' + MUTED + ';">#' + str(rank) + '</div>'
+    h += '<div style="display:flex;align-items:center;gap:0.4rem;margin-top:0.1rem;">'
+    h += '<div style="background:' + col + ';color:#fff;border-radius:5px;'
+    h += 'padding:0.04rem 0.5rem;font-size:1.1rem;font-weight:800;'
+    h += 'min-width:46px;text-align:center;">' + str(value) + '</div>'
+    h += '<div style="font-size:0.75rem;font-weight:700;color:' + MUTED + ';">#' + str(rank) + '</div>'
     h += '</div></div>'
     return h
 
 
 def asp_section_html(title, items):
-    h  = '<div style="font-size:0.58rem;font-weight:700;letter-spacing:0.16em;'
-    h += 'text-transform:uppercase;color:' + CYAN + ';padding-bottom:0.2rem;'
-    h += 'border-bottom:1px solid rgba(27,231,255,0.25);margin-bottom:0.35rem;">' + title + '</div>'
+    h  = section_title(title)
     for name_, ico in items:
-        h += '<div style="display:flex;align-items:center;gap:0.4rem;padding:0.22rem 0;'
-        h += 'font-size:0.76rem;color:' + TEXT + ';border-bottom:1px solid rgba(26,58,92,0.5);">'
+        h += '<div style="display:flex;align-items:center;gap:0.4rem;padding:0.2rem 0;'
+        h += 'font-size:0.76rem;color:' + TEXT + ';border-bottom:1px solid rgba(26,58,92,0.45);">'
         h += icon_html(ico) + '<span>' + name_ + '</span></div>'
     return h
 
 
 def bar_html(label, value, color):
     pct = min(max(int(value), 0), 100)
-    h  = '<div style="margin-bottom:0.62rem;">'
-    h += '<div style="font-size:0.68rem;color:' + MUTED + ';font-weight:500;margin-bottom:0.12rem;">' + label + '</div>'
-    h += '<div style="display:flex;align-items:center;gap:0.42rem;">'
+    h  = '<div style="margin-bottom:0.58rem;">'
+    h += '<div style="font-size:0.67rem;color:' + MUTED + ';font-weight:500;margin-bottom:0.1rem;">' + label + '</div>'
+    h += '<div style="display:flex;align-items:center;gap:0.4rem;">'
     h += '<div style="flex:1;height:7px;background:' + DARK + ';border-radius:3px;overflow:hidden;'
     h += 'border:1px solid rgba(26,58,92,0.6);">'
     h += '<div style="height:100%;width:' + str(pct) + '%;background:' + color + ';border-radius:3px;"></div>'
     h += '</div>'
-    h += '<div style="font-size:0.68rem;font-weight:700;color:#fff;min-width:20px;'
-    h += 'text-align:right;">' + str(value) + '</div>'
+    h += '<div style="font-size:0.67rem;font-weight:700;color:#fff;min-width:22px;text-align:right;">' + str(value) + '</div>'
     h += '</div></div>'
+    return h
+
+
+def profile_pct_bar(label, pct, color):
+    """Grey bar with colored fill — for profile breakdown."""
+    h  = '<div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.28rem;">'
+    h += '<div style="font-size:0.7rem;color:#8090a0;width:68px;font-weight:500;">' + label + '</div>'
+    h += '<div style="flex:1;height:6px;background:#1a2a3a;border-radius:3px;overflow:hidden;">'
+    h += '<div style="height:100%;width:' + str(pct) + '%;background:' + color + ';border-radius:3px;"></div>'
+    h += '</div>'
+    h += '<div style="font-size:0.7rem;font-weight:700;color:#8090a0;min-width:28px;text-align:right;">' + str(pct) + '%</div>'
+    h += '</div>'
     return h
 
 
@@ -220,29 +270,21 @@ def build_radar(p):
     vals = [p["p_comb"], p["p_cons"], p["p_posi"]]
     fig  = go.Figure()
 
-    # Grid rings
     for ring in [20, 40, 60, 80, 100]:
         fig.add_trace(go.Scatterpolar(
             r=[ring, ring, ring, ring],
             theta=[cats[0], cats[1], cats[2], cats[0]],
             mode="lines",
             line=dict(color=BORDER, width=0.7),
-            showlegend=False,
-            hoverinfo="skip",
+            showlegend=False, hoverinfo="skip",
         ))
-
-    # Axis spokes
     for cat in cats:
         fig.add_trace(go.Scatterpolar(
-            r=[0, 100],
-            theta=[cat, cat],
+            r=[0, 100], theta=[cat, cat],
             mode="lines",
             line=dict(color=BORDER, width=1),
-            showlegend=False,
-            hoverinfo="skip",
+            showlegend=False, hoverinfo="skip",
         ))
-
-    # Player polygon — fillcolor MUST be rgba(), not 8-digit hex
     fig.add_trace(go.Scatterpolar(
         r=vals + [vals[0]],
         theta=cats + [cats[0]],
@@ -254,29 +296,26 @@ def build_radar(p):
         showlegend=False,
         hovertemplate="%{theta}: <b>%{r}%</b><extra></extra>",
     ))
-
     fig.update_layout(
         polar=dict(
             bgcolor="rgba(0,0,0,0)",
             radialaxis=dict(visible=False, range=[0, 100]),
             angularaxis=dict(
                 tickfont=dict(size=10, color="#8ca0b8", family="Inter"),
-                gridcolor=BORDER,
-                linecolor=BORDER,
-                rotation=90,
-                direction="counterclockwise",
+                gridcolor=BORDER, linecolor=BORDER,
+                rotation=90, direction="counterclockwise",
             ),
         ),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=38, r=38, t=18, b=18),
-        height=250,
+        margin=dict(l=38, r=38, t=10, b=10),
+        height=220,
         showlegend=False,
     )
     return fig
 
 
-# SIDEBAR
+# ─── SIDEBAR ─────────────────────────────────────────────────────────────────
 with st.sidebar:
     h  = '<div style="text-align:center;padding:0.85rem 0 0.45rem;">'
     h += '<div style="font-size:2rem;line-height:1;">&#x26BD;</div>'
@@ -303,7 +342,8 @@ with st.sidebar:
     st.divider()
 
     lbl3  = '<div style="font-size:0.57rem;font-weight:700;letter-spacing:0.18em;'
-    lbl3 += 'text-transform:uppercase;color:' + CYAN + ';margin-bottom:0.2rem;">Navegacao</div>'
+    lbl3 += 'text-transform:uppercase;color:' + CYAN + ';margin-bottom:0.2rem;'
+    lbl3 += 'text-align:center;">Navegacao</div>'
     st.markdown(lbl3, unsafe_allow_html=True)
     for pos in ["Zagueiros", "Laterais", "Meio-campistas", "Extremos", "Meias Ofensivos", "Atacantes"]:
         st.button(pos, key="nav_" + pos)
@@ -322,14 +362,14 @@ with st.sidebar:
     st.markdown(icons, unsafe_allow_html=True)
 
 
-# LOAD PLAYER
+# ─── LOAD PLAYER ─────────────────────────────────────────────────────────────
 p = PLAYERS[player_key]
 
 
-# HEADER BAR
+# ─── HEADER BAR ──────────────────────────────────────────────────────────────
 hdr  = '<div style="background:' + DARK + ';border-bottom:1px solid rgba(27,231,255,0.13);'
 hdr += 'padding:0.35rem 0.2rem;display:flex;justify-content:space-between;'
-hdr += 'align-items:center;margin-bottom:0.7rem;">'
+hdr += 'align-items:center;margin-bottom:0.6rem;">'
 hdr += '<div style="display:flex;align-items:center;gap:0.45rem;">'
 hdr += '<span style="font-size:0.72rem;">&#x26BD;</span>'
 hdr += '<span style="font-size:0.57rem;letter-spacing:0.2em;color:' + CYAN + ';'
@@ -344,28 +384,29 @@ hdr += '</div></div>'
 st.markdown(hdr, unsafe_allow_html=True)
 
 
-# MAIN COLUMNS
-c1, c2, c3, c4, c5 = st.columns([2.0, 1.5, 2.1, 1.75, 2.0], gap="small")
+# ═══════════════════════════════════════════════════════════════════════════
+# ROW 1 — Player card | Ratings | Aspectos Def/Cons | Aspectos Ofensivos
+# ═══════════════════════════════════════════════════════════════════════════
+r1c1, r1c2, r1c3, r1c4 = st.columns([2.0, 1.6, 1.9, 1.9], gap="small")
 
+# ── R1C1: PLAYER CARD ──────────────────────────────────────────────────────
+with r1c1:
+    card  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.9rem;height:100%;">'
 
-# C1 — PLAYER CARD
-with c1:
-    card  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:1rem;height:100%;">'
+    card += '<div style="text-align:center;margin-bottom:0.6rem;">'
+    card += '<div style="display:inline-flex;align-items:center;justify-content:center;'
+    card += 'width:64px;height:64px;border-radius:50%;'
+    card += 'background:linear-gradient(135deg,' + BORDER + ',' + DARK + ');'
+    card += 'border:2px solid rgba(27,231,255,0.25);font-size:2.1rem;line-height:1;">&#x1F464;</div>'
+    card += '</div>'
 
     card += '<div style="text-align:center;margin-bottom:0.7rem;">'
-    card += '<div style="display:inline-flex;align-items:center;justify-content:center;'
-    card += 'width:72px;height:72px;border-radius:50%;'
-    card += 'background:linear-gradient(135deg,' + BORDER + ',' + DARK + ');'
-    card += 'border:2px solid rgba(27,231,255,0.25);font-size:2.4rem;line-height:1;">&#x1F464;</div>'
+    card += '<div style="font-size:1.22rem;font-weight:800;color:#fff;letter-spacing:-0.01em;line-height:1.15;">' + p["name"] + '</div>'
+    card += '<div style="font-size:0.72rem;color:' + MUTED + ';margin-top:0.14rem;">' + p["position"] + '</div>'
+    card += '<div style="font-size:0.78rem;font-weight:600;color:' + CYAN + ';margin-top:0.08rem;">' + p["club"] + '</div>'
     card += '</div>'
 
-    card += '<div style="text-align:center;margin-bottom:0.8rem;">'
-    card += '<div style="font-size:1.32rem;font-weight:800;color:#fff;letter-spacing:-0.01em;line-height:1.15;">' + p["name"] + '</div>'
-    card += '<div style="font-size:0.75rem;color:' + MUTED + ';margin-top:0.18rem;">' + p["position"] + '</div>'
-    card += '<div style="font-size:0.8rem;font-weight:600;color:' + CYAN + ';margin-top:0.1rem;">' + p["club"] + '</div>'
-    card += '</div>'
-
-    card += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.35rem;margin-bottom:0.75rem;">'
+    card += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.3rem;margin-bottom:0.65rem;">'
     bio_items = [
         ("Ano",           MUTED, str(p["year"])),
         ("Nacionalidade", CYAN,  p["nat"]),
@@ -373,88 +414,96 @@ with c1:
         ("Pe dominante",  CYAN,  p["foot"]),
     ]
     for bio_lbl, bio_col, bio_val in bio_items:
-        card += '<div style="background:' + DARK + ';border:1px solid rgba(26,58,92,0.5);border-radius:6px;padding:0.3rem 0.45rem;">'
-        card += '<div style="font-size:0.55rem;color:' + bio_col + ';text-transform:uppercase;letter-spacing:0.1em;">' + bio_lbl + '</div>'
-        card += '<div style="font-size:0.88rem;font-weight:700;color:#fff;">' + bio_val + '</div>'
+        card += '<div style="background:' + DARK + ';border:1px solid rgba(26,58,92,0.5);border-radius:6px;padding:0.28rem 0.4rem;">'
+        card += '<div style="font-size:0.52rem;color:' + bio_col + ';text-transform:uppercase;letter-spacing:0.1em;">' + bio_lbl + '</div>'
+        card += '<div style="font-size:0.84rem;font-weight:700;color:#fff;">' + bio_val + '</div>'
         card += '</div>'
     card += '</div>'
 
-    card += '<div style="background:' + DARK + ';border:1px solid ' + BORDER + ';border-radius:8px;padding:0.55rem 0.6rem;">'
-    card += '<div style="display:flex;justify-content:space-between;margin-bottom:0.28rem;">'
+    card += '<div style="background:' + DARK + ';border:1px solid ' + BORDER + ';border-radius:8px;padding:0.5rem 0.55rem;">'
+    card += '<div style="display:flex;justify-content:space-between;margin-bottom:0.22rem;">'
     for stat_lbl in ["Minutagem", "Gols", "Assist."]:
-        card += '<span style="font-size:0.55rem;color:' + MUTED + ';text-transform:uppercase;letter-spacing:0.1em;">' + stat_lbl + '</span>'
+        card += '<span style="font-size:0.52rem;color:' + MUTED + ';text-transform:uppercase;letter-spacing:0.1em;">' + stat_lbl + '</span>'
     card += '</div>'
     card += '<div style="display:flex;justify-content:space-between;align-items:baseline;">'
     for stat_val in [str(p["min"]), str(p["goals"]), str(p["ast"])]:
-        card += '<span style="font-size:1.55rem;font-weight:900;color:#fff;">' + stat_val + '</span>'
+        card += '<span style="font-size:1.45rem;font-weight:900;color:#fff;">' + stat_val + '</span>'
     card += '</div></div>'
     card += '</div>'
-
     st.markdown(card, unsafe_allow_html=True)
 
-
-# C2 — RATINGS
-with c2:
+# ── R1C2: RATINGS ──────────────────────────────────────────────────────────
+with r1c2:
     rtg  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.9rem;height:100%;">'
-    rtg += '<div style="font-size:0.58rem;font-weight:700;letter-spacing:0.16em;'
-    rtg += 'text-transform:uppercase;color:' + CYAN + ';padding-bottom:0.2rem;'
-    rtg += 'border-bottom:1px solid rgba(27,231,255,0.25);margin-bottom:0.55rem;">Ratings</div>'
+    rtg += section_title("Ratings")
 
-    rtg += '<div style="background:' + DARK + ';border:1px solid ' + BORDER + ';border-radius:8px;padding:0.48rem 0.65rem;margin-bottom:0.42rem;">'
-    rtg += '<div style="font-size:0.56rem;font-weight:600;letter-spacing:0.13em;text-transform:uppercase;color:' + MUTED + ';">'
-    rtg += 'Rating Geral <span style="color:' + CYAN + ';font-size:0.48rem;">(Rank)</span></div>'
-    rtg += '<div style="display:flex;align-items:center;gap:0.45rem;margin-top:0.14rem;">'
-    rtg += '<div style="background:' + RED + ';color:#fff;border-radius:5px;padding:0.05rem 0.55rem;font-size:1.45rem;font-weight:800;">' + str(p["rtg"]) + '</div>'
-    rtg += '<div style="font-size:0.9rem;font-weight:700;color:' + MUTED + ';">#' + str(p["rnk"]) + '</div>'
+    # Rating Geral — uses gradient color
+    rtg += '<div style="background:' + DARK + ';border:1px solid ' + BORDER + ';border-radius:8px;padding:0.44rem 0.6rem;margin-bottom:0.35rem;">'
+    rtg += '<div style="font-size:0.53rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:' + MUTED + ';">'
+    rtg += 'Rating Geral <span style="color:' + CYAN + ';font-size:0.46rem;">(Rank)</span></div>'
+    rtg += '<div style="display:flex;align-items:center;gap:0.4rem;margin-top:0.1rem;">'
+    rtg += '<div style="background:' + rating_color(p["rtg"]) + ';color:#fff;border-radius:5px;'
+    rtg += 'padding:0.04rem 0.5rem;font-size:1.35rem;font-weight:800;min-width:52px;text-align:center;">' + str(p["rtg"]) + '</div>'
+    rtg += '<div style="font-size:0.82rem;font-weight:700;color:' + MUTED + ';">#' + str(p["rnk"]) + '</div>'
     rtg += '</div></div>'
 
-    rtg += rating_pill("Combativo",  p["comb"], p["r_comb"], PURPLE)
-    rtg += rating_pill("Construtor", p["cons"], p["r_cons"], "#1a4a6e")
-    rtg += rating_pill("Posicional", p["posi"], p["r_posi"], "#1a4a3e")
+    rtg += rating_pill("Combativo",  p["comb"], p["r_comb"])
+    rtg += rating_pill("Construtor", p["cons"], p["r_cons"])
+    rtg += rating_pill("Posicional", p["posi"], p["r_posi"])
     rtg += "</div>"
-
     st.markdown(rtg, unsafe_allow_html=True)
 
-
-# C3 — RADAR
-with c3:
-    rc  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.75rem 0.9rem 0.2rem;">'
-    rc += '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
-    rc += '<div>'
-    rc += '<div style="font-size:0.58rem;color:' + MUTED + ';text-transform:uppercase;letter-spacing:0.14em;font-weight:600;">Perfil</div>'
-    rc += '<div style="font-size:1.45rem;font-weight:800;color:#fff;letter-spacing:-0.01em;">' + p["profile"] + '</div>'
-    rc += '</div>'
-    rc += '<div style="text-align:right;">'
-    rc += '<div style="font-size:0.73rem;font-weight:700;color:' + RED   + ';">Combativo '  + str(p["p_comb"]) + '%</div>'
-    rc += '<div style="font-size:0.73rem;font-weight:700;color:' + GREEN + ';">Construtor ' + str(p["p_cons"]) + '%</div>'
-    rc += '<div style="font-size:0.73rem;font-weight:700;color:' + CYAN  + ';">Posicional ' + str(p["p_posi"]) + '%</div>'
-    rc += '</div></div></div>'
-    st.markdown(rc, unsafe_allow_html=True)
-    st.plotly_chart(build_radar(p), use_container_width=True, config={"displayModeBar": False})
-
-
-# C4 — ASPECTOS
-with c4:
+# ── R1C3: ASPECTOS DEFENSIVOS + CONSTRUCAO ─────────────────────────────────
+with r1c3:
     asp  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.85rem;height:100%;">'
     asp += asp_section_html("Aspectos Defensivos", p["def_asp"])
-    asp += '<div style="margin:0.55rem 0;border-top:1px solid rgba(26,58,92,0.6);"></div>'
+    asp += '<div style="margin:0.5rem 0;border-top:1px solid rgba(26,58,92,0.6);"></div>'
     asp += asp_section_html("Aspectos de Construcao", p["con_asp"])
-    asp += '<div style="margin-top:0.3rem;font-size:0.55rem;color:' + MUTED + ';">*Passes Construtores Finais</div>'
+    asp += '<div style="margin-top:0.28rem;font-size:0.52rem;color:' + MUTED + ';">*Passes Construtores Finais</div>'
     asp += '</div>'
     st.markdown(asp, unsafe_allow_html=True)
 
-
-# C5 — OFENSIVOS + BARS
-with c5:
-    off  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.85rem;">'
+# ── R1C4: ASPECTOS OFENSIVOS ───────────────────────────────────────────────
+with r1c4:
+    off  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.85rem;height:100%;">'
     off += asp_section_html("Aspectos Ofensivos", p["off_asp"])
     off += '</div>'
-    off += '<div style="margin:0.45rem 0;"></div>'
-    off += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.85rem;">'
-    off += '<div style="font-size:0.58rem;font-weight:700;letter-spacing:0.16em;'
-    off += 'text-transform:uppercase;color:' + CYAN + ';padding-bottom:0.2rem;'
-    off += 'border-bottom:1px solid rgba(27,231,255,0.25);margin-bottom:0.55rem;">Metricas</div>'
-    for lbl, val, col in p["bars"]:
-        off += bar_html(lbl, val, col)
-    off += "</div>"
     st.markdown(off, unsafe_allow_html=True)
+
+
+st.markdown('<div style="height:0.45rem;"></div>', unsafe_allow_html=True)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ROW 2 — Radar / Perfil | Metricas (bar charts)
+# ═══════════════════════════════════════════════════════════════════════════
+r2c1, r2c2 = st.columns([2.2, 5.2], gap="small")
+
+# ── R2C1: PERFIL RADAR ─────────────────────────────────────────────────────
+with r2c1:
+    rc  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.75rem 0.9rem 0;">'
+    rc += '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+    rc += '<div>'
+    rc += '<div style="font-size:0.55rem;color:' + MUTED + ';text-transform:uppercase;letter-spacing:0.13em;font-weight:600;">Perfil</div>'
+    rc += '<div style="font-size:1.3rem;font-weight:800;color:#fff;letter-spacing:-0.01em;">' + p["profile"] + '</div>'
+    rc += '</div>'
+    rc += '<div style="text-align:right;">'
+    rc += '<div style="font-size:0.68rem;font-weight:700;color:#6a7a8a;">Combativo '  + str(p["p_comb"]) + '%</div>'
+    rc += '<div style="font-size:0.68rem;font-weight:700;color:#6a7a8a;">Construtor ' + str(p["p_cons"]) + '%</div>'
+    rc += '<div style="font-size:0.68rem;font-weight:700;color:#6a7a8a;">Posicional ' + str(p["p_posi"]) + '%</div>'
+    rc += '</div></div>'
+    rc += '</div>'
+    st.markdown(rc, unsafe_allow_html=True)
+    st.plotly_chart(build_radar(p), use_container_width=True, config={"displayModeBar": False})
+
+# ── R2C2: METRICAS ──────────────────────────────────────────────────────────
+with r2c2:
+    met  = '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:0.85rem;height:100%;">'
+    met += section_title("Metricas")
+    # 2-column grid for bars
+    met += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.1rem 1.4rem;">'
+    for lbl, val, col in p["bars"]:
+        met += bar_html(lbl, val, col)
+    met += '</div>'
+    met += '</div>'
+    st.markdown(met, unsafe_allow_html=True)
