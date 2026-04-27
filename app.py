@@ -28,7 +28,6 @@ html, body,
 [data-testid="stSidebar"] label,
 [data-testid="stSidebar"] span,
 [data-testid="stSidebar"] div { color: #cbd5e1 !important; }
-
 .block-container {
     padding-top: 1.2rem !important;
     padding-bottom: 1rem !important;
@@ -254,9 +253,14 @@ PROFILE_COLORS = {
     "Híbrido":    "#FED766",
 }
 PROFILE_TEXT_DARK = {"Construtor", "Híbrido"}
-LEAGUE_AVG = {"construcao": 55, "ofensividade": 52, "um_vs_um": 50, "contencao": 58, "duelo_aereo": 54}
+LEAGUE_AVG = {
+    "construcao": 55, "ofensividade": 52,
+    "um_vs_um": 50,   "contencao": 58, "duelo_aereo": 54
+}
 
-# ─── STATE ────────────────────────────────────────────────────────────────────
+# ─── STATE — inicializa UMA única vez ────────────────────────────────────────
+# ✅ FIX 1: session_state só é escrito quando o valor realmente muda,
+#            evitando o loop de rerun que causava o carregamento infinito.
 if "selected_player" not in st.session_state:
     st.session_state["selected_player"] = list(PLAYERS.keys())[0]
 
@@ -282,125 +286,103 @@ def hex_to_rgb(h):
     return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
 
 def polar_to_xy(values, angles, max_val=100):
-    """Converte valores polares para coordenadas cartesianas normalizadas."""
     xs = [(v / max_val) * math.cos(a) for v, a in zip(values, angles)]
     ys = [(v / max_val) * math.sin(a) for v, a in zip(values, angles)]
     xs.append(xs[0])
     ys.append(ys[0])
     return xs, ys
 
-def build_radar(player_name, p, pc):
-    """
-    Radar 100% cartesiano — sem nenhuma chave 'polar' no layout.
-    Compatível com qualquer versão do Plotly.
-    """
-    cats = ["Construção", "Ofensividade", "1vs1 Def.", "Contenção", "Duelo Aéreo"]
-    vals = [p["construcao"], p["ofensividade"], p["um_vs_um"], p["contencao"], p["duelo_aereo"]]
-    avg  = [LEAGUE_AVG["construcao"], LEAGUE_AVG["ofensividade"],
-            LEAGUE_AVG["um_vs_um"],   LEAGUE_AVG["contencao"], LEAGUE_AVG["duelo_aereo"]]
-
+# ✅ FIX 2: @st.cache_data evita recalcular o radar a cada interação.
+#            O gráfico só é reconstruído quando player_name ou pc muda.
+@st.cache_data
+def build_radar(player_name, pc,
+                construcao, ofensividade, um_vs_um, contencao, duelo_aereo):
+    cats   = ["Construção", "Ofensividade", "1vs1 Def.", "Contenção", "Duelo Aéreo"]
+    vals   = [construcao, ofensividade, um_vs_um, contencao, duelo_aereo]
+    avg    = [LEAGUE_AVG["construcao"], LEAGUE_AVG["ofensividade"],
+              LEAGUE_AVG["um_vs_um"],   LEAGUE_AVG["contencao"], LEAGUE_AVG["duelo_aereo"]]
     n      = len(cats)
     angles = [math.pi / 2 - 2 * math.pi * i / n for i in range(n)]
-
     r, g, b = hex_to_rgb(pc)
+
     fig = go.Figure()
 
-    # ── anéis de fundo ──────────────────────────────────────────────────────
-    ring_styles = [
+    # anéis de fundo
+    for ring_val, fill_color in [
         (100, "rgba(27,231,255,0.02)"),
         (75,  "rgba(27,231,255,0.04)"),
         (50,  "rgba(27,231,255,0.055)"),
         (25,  "rgba(27,231,255,0.07)"),
-    ]
-    for ring_val, fill_color in ring_styles:
+    ]:
         rx, ry = polar_to_xy([ring_val] * n, angles)
         fig.add_trace(go.Scatter(
-            x=rx, y=ry,
-            mode="lines",
-            fill="toself",
+            x=rx, y=ry, mode="lines", fill="toself",
             fillcolor=fill_color,
             line=dict(color="rgba(27,231,255,0.12)", width=0.8),
-            hoverinfo="skip",
-            showlegend=False,
+            hoverinfo="skip", showlegend=False,
         ))
 
-    # ── linhas do eixo central ───────────────────────────────────────────────
+    # linhas de eixo
     for a in angles:
         fig.add_trace(go.Scatter(
-            x=[0, math.cos(a)],
-            y=[0, math.sin(a)],
+            x=[0, math.cos(a)], y=[0, math.sin(a)],
             mode="lines",
             line=dict(color="rgba(27,231,255,0.15)", width=0.8),
-            hoverinfo="skip",
-            showlegend=False,
+            hoverinfo="skip", showlegend=False,
         ))
 
-    # ── ticks numéricos (25 / 50 / 75 / 100) no eixo do topo ───────────────
+    # ticks numéricos
     top_angle = math.pi / 2
     for tick in [25, 50, 75, 100]:
-        tx = (tick / 100) * math.cos(top_angle) + 0.03
-        ty = (tick / 100) * math.sin(top_angle)
         fig.add_annotation(
-            x=tx, y=ty,
-            text=str(tick),
-            showarrow=False,
+            x=(tick / 100) * math.cos(top_angle) + 0.03,
+            y=(tick / 100) * math.sin(top_angle),
+            text=str(tick), showarrow=False,
             font=dict(color="rgba(27,231,255,0.40)", size=8),
             xanchor="left",
         )
 
-    # ── linha média da liga ──────────────────────────────────────────────────
+    # média da liga
     ax, ay = polar_to_xy(avg, angles)
     fig.add_trace(go.Scatter(
-        x=ax, y=ay,
-        mode="lines",
-        fill="toself",
+        x=ax, y=ay, mode="lines", fill="toself",
         fillcolor="rgba(137,128,245,0.10)",
         line=dict(color="#8980F5", width=1.8, dash="dot"),
-        name="Média Liga",
-        hoverinfo="skip",
+        name="Média Liga", hoverinfo="skip",
     ))
 
-    # ── polígono do jogador ──────────────────────────────────────────────────
+    # polígono do jogador
     vx, vy = polar_to_xy(vals, angles)
     fig.add_trace(go.Scatter(
-        x=vx, y=vy,
-        mode="lines+markers",
-        fill="toself",
+        x=vx, y=vy, mode="lines+markers", fill="toself",
         fillcolor=f"rgba({r},{g},{b},0.22)",
         line=dict(color=pc, width=3),
         marker=dict(size=9, color=pc, line=dict(color="#0D1B2A", width=2)),
-        name=player_name,
-        hoverinfo="skip",
+        name=player_name, hoverinfo="skip",
     ))
 
-    # ── pontos com valor no hover ────────────────────────────────────────────
+    # pontos com hover
     hover_x = [(v / 100) * math.cos(a) for v, a in zip(vals, angles)]
     hover_y = [(v / 100) * math.sin(a) for v, a in zip(vals, angles)]
     fig.add_trace(go.Scatter(
-        x=hover_x, y=hover_y,
-        mode="markers",
+        x=hover_x, y=hover_y, mode="markers",
         marker=dict(size=10, color=pc, line=dict(color="#0D1B2A", width=2)),
         text=[f"<b>{c}</b>: {v}" for c, v in zip(cats, vals)],
         hovertemplate="%{text}<extra></extra>",
         showlegend=False,
     ))
 
-    # ── labels das categorias ────────────────────────────────────────────────
+    # labels
     label_r = 1.25
     for cat, val, a in zip(cats, vals, angles):
-        lx = label_r * math.cos(a)
-        ly = label_r * math.sin(a)
         color_val = "#31E981" if val >= 70 else ("#FED766" if val >= 40 else "#FE4A49")
         fig.add_annotation(
-            x=lx, y=ly,
+            x=label_r * math.cos(a), y=label_r * math.sin(a),
             text=f"<span style='font-size:11px;color:#cbd5e1'><b>{cat}</b></span>"
                  f"<br><span style='color:{color_val};font-size:13px'><b>{val}</b></span>",
-            showarrow=False,
-            align="center",
-            font=dict(size=11),
+            showarrow=False, align="center", font=dict(size=11),
         )
 
-    # ── layout 100% cartesiano ───────────────────────────────────────────────
     fig.update_layout(
         xaxis=dict(visible=False, range=[-1.55, 1.55], fixedrange=True),
         yaxis=dict(visible=False, range=[-1.55, 1.55], fixedrange=True, scaleanchor="x"),
@@ -408,8 +390,7 @@ def build_radar(player_name, p, pc):
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=True,
         legend=dict(
-            orientation="h",
-            x=0.5, xanchor="center", y=-0.02,
+            orientation="h", x=0.5, xanchor="center", y=-0.02,
             font=dict(color="#94a3b8", size=11),
             bgcolor="rgba(0,0,0,0)",
         ),
@@ -420,17 +401,29 @@ def build_radar(player_name, p, pc):
 
 # ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<p style="color:#1BE7FF;font-size:18px;font-weight:800;letter-spacing:2px;margin:0">⚽ SCOUT ANALYTICS</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p style="color:#1BE7FF;font-size:18px;font-weight:800;'
+        'letter-spacing:2px;margin:0">⚽ SCOUT ANALYTICS</p>',
+        unsafe_allow_html=True
+    )
     st.divider()
 
-    st.markdown('<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Filtrar Perfil</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;'
+        'text-transform:uppercase;margin-bottom:6px">Filtrar Perfil</p>',
+        unsafe_allow_html=True
+    )
     f_combativo  = st.checkbox("⚡ Combativo")
     f_construtor = st.checkbox("🔧 Construtor")
     f_hibrido    = st.checkbox("🔀 Híbrido")
     f_posicional = st.checkbox("📍 Posicional")
 
     st.divider()
-    st.markdown('<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Jogadores</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;'
+        'text-transform:uppercase;margin-bottom:6px">Jogadores</p>',
+        unsafe_allow_html=True
+    )
     search = st.text_input("", placeholder="🔍 Buscar jogador...", label_visibility="collapsed")
 
     all_names = list(PLAYERS.keys())
@@ -442,34 +435,54 @@ with st.sidebar:
     )
     filtered = [
         n for n in all_names
-        if (not search or search.lower() in n.lower() or search.lower() in PLAYERS[n]["club"].lower())
+        if (not search
+            or search.lower() in n.lower()
+            or search.lower() in PLAYERS[n]["club"].lower())
         and (not active_profiles or PLAYERS[n]["profile"] in active_profiles)
     ]
     if not filtered:
         filtered = all_names
 
     display_names = [f"{n} ({PLAYERS[n]['club']})" for n in filtered]
-    cur = st.session_state["selected_player"]
+    cur         = st.session_state["selected_player"]
     default_idx = filtered.index(cur) if cur in filtered else 0
 
     chosen = st.selectbox("", display_names, index=default_idx, label_visibility="collapsed")
-    selected_player = filtered[display_names.index(chosen)]
-    st.session_state["selected_player"] = selected_player
+    new_selection = filtered[display_names.index(chosen)]
+
+    # ✅ FIX 1 aplicado: só escreve no session_state se o valor mudou
+    if new_selection != st.session_state["selected_player"]:
+        st.session_state["selected_player"] = new_selection
+        st.rerun()
+
+    selected_player = st.session_state["selected_player"]
 
     st.divider()
-    st.markdown('<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Navegação</p>', unsafe_allow_html=True)
-    for nav in ["🛡️ Zagueiros", "🏃 Laterais", "⚙️ Meio-campistas", "💨 Extremos", "🎯 Meias Ofensivos", "⚡ Atacantes"]:
+    st.markdown(
+        '<p style="color:#1BE7FF;font-size:11px;font-weight:700;letter-spacing:1px;'
+        'text-transform:uppercase;margin-bottom:6px">Navegação</p>',
+        unsafe_allow_html=True
+    )
+    for nav in ["🛡️ Zagueiros", "🏃 Laterais", "⚙️ Meio-campistas",
+                "💨 Extremos", "🎯 Meias Ofensivos", "⚡ Atacantes"]:
         st.button(nav, use_container_width=True, key=f"nav_{nav}")
 
     st.divider()
-    st.markdown('<p style="color:#475569;font-size:12px">👥 Jogadores Analisados: <span style="color:#1BE7FF;font-weight:700">78</span></p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p style="color:#475569;font-size:12px">👥 Jogadores Analisados: '
+        '<span style="color:#1BE7FF;font-weight:700">78</span></p>',
+        unsafe_allow_html=True
+    )
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
 p  = PLAYERS[selected_player]
 pc = PROFILE_COLORS.get(p["profile"], "#1BE7FF")
 text_on_badge = "#0D1B2A" if p["profile"] in PROFILE_TEXT_DARK else "#ffffff"
 
-st.markdown(f'<div class="page-header">📊 ANÁLISE DE JOGADORES — {p["position"].upper()}S</div>', unsafe_allow_html=True)
+st.markdown(
+    f'<div class="page-header">📊 ANÁLISE DE JOGADORES — {p["position"].upper()}S</div>',
+    unsafe_allow_html=True
+)
 
 col1, col2, col3 = st.columns([2, 2, 3], gap="medium")
 
@@ -493,7 +506,8 @@ with col1:
         <div class="stat-box"><div class="sv">{p['assists']}</div><div class="sl">Assist.</div></div>
       </div>
       <div style="margin-top:14px;text-align:center">
-        <span style="background:{pc};color:{text_on_badge};font-weight:800;font-size:13px;border-radius:20px;padding:5px 20px;letter-spacing:1px">
+        <span style="background:{pc};color:{text_on_badge};font-weight:800;font-size:13px;
+                     border-radius:20px;padding:5px 20px;letter-spacing:1px">
           {p['profile']}
         </span>
       </div>
@@ -577,11 +591,13 @@ with col4:
     </div>
     """, unsafe_allow_html=True)
 
-    st.plotly_chart(
-        build_radar(selected_player, p, pc),
-        use_container_width=True,
-        config={"displayModeBar": False},
+    # ✅ FIX 2 aplicado: parâmetros primitivos para o cache funcionar corretamente
+    fig = build_radar(
+        selected_player, pc,
+        p["construcao"], p["ofensividade"], p["um_vs_um"],
+        p["contencao"],  p["duelo_aereo"]
     )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 with col5:
     bars = (
