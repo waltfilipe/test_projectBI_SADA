@@ -1,5 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
+import math
 
 # ─── PAGE CONFIG ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -33,7 +34,6 @@ html, body,
     padding-bottom: 1rem !important;
     max-width: 100% !important;
 }
-
 .card {
     background: #112031;
     border: 1px solid #1BE7FF22;
@@ -42,46 +42,37 @@ html, body,
     height: 100%;
     box-sizing: border-box;
 }
-
-.player-name { font-size: 26px; font-weight: 800; color: #1BE7FF; line-height:1.2; }
-.player-pos  { font-size: 13px; color: #8980F5; margin-top:2px; font-weight:600; }
-.player-club { font-size: 14px; color: #31E981; font-weight:600; margin-top:2px; }
-
-.info-row  { display:flex; justify-content:space-between; margin-top:10px; gap:8px; }
-.info-cell { flex:1; background:#0D1B2A; border-radius:8px; padding:8px; text-align:center;
-             border:1px solid #1BE7FF11; }
+.player-name { font-size:26px; font-weight:800; color:#1BE7FF; line-height:1.2; }
+.player-pos  { font-size:13px; color:#8980F5; margin-top:2px; font-weight:600; }
+.player-club { font-size:14px; color:#31E981; font-weight:600; margin-top:2px; }
+.info-row    { display:flex; justify-content:space-between; margin-top:10px; gap:8px; }
+.info-cell   { flex:1; background:#0D1B2A; border-radius:8px; padding:8px; text-align:center;
+               border:1px solid #1BE7FF11; }
 .info-cell .ic-label { font-size:10px; color:#8980F5; text-transform:uppercase; letter-spacing:.5px; }
 .info-cell .ic-val   { font-size:14px; font-weight:700; color:#FED766; }
-
 .stat-row { display:flex; gap:8px; margin-top:12px; }
 .stat-box { flex:1; background:#0D1B2A; border:1px solid #1BE7FF22;
             border-radius:10px; text-align:center; padding:10px 6px; }
 .stat-box .sv { font-size:24px; font-weight:800; color:#1BE7FF; }
 .stat-box .sl { font-size:10px; color:#8980F5; text-transform:uppercase;
                 letter-spacing:.8px; margin-top:2px; }
-
-.r-block    { margin-bottom: 14px; }
+.r-block    { margin-bottom:14px; }
 .r-label    { font-size:10px; color:#8980F5; text-transform:uppercase;
               letter-spacing:1px; margin-bottom:6px; font-weight:600; }
 .rating-row { display:flex; align-items:center; gap:10px; }
-
 .r-badge      { font-size:22px; font-weight:900; border-radius:8px;
-                padding:5px 14px; min-width:62px; text-align:center;
-                letter-spacing:.5px; }
+                padding:5px 14px; min-width:62px; text-align:center; }
 .r-badge.main { font-size:30px; background:#1BE7FF; color:#0D1B2A; }
 .r-badge.comb { background:#FE4A49; color:#fff; }
 .r-badge.cons { background:#31E981; color:#0D1B2A; }
 .r-badge.posi { background:#8980F5; color:#fff; }
-
-.rank-tag { background:#0D1B2A; color:#1BE7FF; border:1px solid #1BE7FF44;
-            border-radius:6px; padding:4px 12px; font-size:13px; font-weight:700; }
-
+.rank-tag   { background:#0D1B2A; color:#1BE7FF; border:1px solid #1BE7FF44;
+              border-radius:6px; padding:4px 12px; font-size:13px; font-weight:700; }
 .section-title { font-size:11px; font-weight:700; letter-spacing:1px;
                  text-transform:uppercase; margin-bottom:8px; }
-.aspect-tag    { display:inline-block; background:#0D1B2A; border:1px solid #1BE7FF33;
-                 border-radius:6px; padding:4px 10px; font-size:12px;
-                 color:#cbd5e1; margin:3px 2px; }
-
+.aspect-tag { display:inline-block; background:#0D1B2A; border:1px solid #1BE7FF33;
+              border-radius:6px; padding:4px 10px; font-size:12px;
+              color:#cbd5e1; margin:3px 2px; }
 .attr-wrap   { margin-bottom:13px; }
 .attr-header { display:flex; justify-content:space-between; margin-bottom:4px; }
 .attr-name   { font-size:13px; color:#94a3b8; }
@@ -89,14 +80,10 @@ html, body,
 .bar-bg      { background:#0D1B2A; border-radius:6px; height:10px; overflow:hidden;
                border:1px solid #1BE7FF11; }
 .bar-fill    { height:10px; border-radius:6px; }
-
 .profile-label { font-size:11px; color:#8980F5; text-transform:uppercase; letter-spacing:1px; }
-.profile-name  { font-size:22px; font-weight:800; }
-.pct-item      { font-size:13px; margin-bottom:5px; }
-
+.pct-item    { font-size:13px; margin-bottom:5px; }
 .page-header { color:#1BE7FF; font-size:20px; font-weight:800; letter-spacing:2px;
                margin-bottom:14px; border-bottom:2px solid #1BE7FF33; padding-bottom:8px; }
-
 .stButton > button {
     background:#0D1B2A !important; color:#1BE7FF !important;
     border:1px solid #1BE7FF44 !important; border-radius:8px !important;
@@ -106,7 +93,6 @@ html, body,
     background:#1BE7FF !important; color:#0D1B2A !important;
     font-weight:700 !important;
 }
-
 .stSelectbox > div > div,
 .stTextInput > div > div {
     background:#0D1B2A !important; border:1px solid #1BE7FF33 !important;
@@ -265,13 +251,10 @@ PROFILE_COLORS = {
     "Combativo": "#FE4A49",
     "Construtor": "#31E981",
     "Posicional": "#8980F5",
-    "Híbrido": "#FED766",
+    "Híbrido":    "#FED766",
 }
 PROFILE_TEXT_DARK = {"Construtor", "Híbrido"}
-
-LEAGUE_AVG = {
-    "construcao": 55, "ofensividade": 52, "um_vs_um": 50, "contencao": 58, "duelo_aereo": 54
-}
+LEAGUE_AVG = {"construcao": 55, "ofensividade": 52, "um_vs_um": 50, "contencao": 58, "duelo_aereo": 54}
 
 # ─── STATE ────────────────────────────────────────────────────────────────────
 if "selected_player" not in st.session_state:
@@ -298,83 +281,140 @@ def hex_to_rgb(h):
     h = h.lstrip("#")
     return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
 
+def polar_to_xy(values, angles, max_val=100):
+    """Converte valores polares para coordenadas cartesianas normalizadas."""
+    xs = [(v / max_val) * math.cos(a) for v, a in zip(values, angles)]
+    ys = [(v / max_val) * math.sin(a) for v, a in zip(values, angles)]
+    xs.append(xs[0])
+    ys.append(ys[0])
+    return xs, ys
+
 def build_radar(player_name, p, pc):
-    # Radar profissional e compatível com plotly cloud env
+    """
+    Radar 100% cartesiano — sem nenhuma chave 'polar' no layout.
+    Compatível com qualquer versão do Plotly.
+    """
     cats = ["Construção", "Ofensividade", "1vs1 Def.", "Contenção", "Duelo Aéreo"]
     vals = [p["construcao"], p["ofensividade"], p["um_vs_um"], p["contencao"], p["duelo_aereo"]]
-    avg  = [LEAGUE_AVG["construcao"], LEAGUE_AVG["ofensividade"], LEAGUE_AVG["um_vs_um"], LEAGUE_AVG["contencao"], LEAGUE_AVG["duelo_aereo"]]
+    avg  = [LEAGUE_AVG["construcao"], LEAGUE_AVG["ofensividade"],
+            LEAGUE_AVG["um_vs_um"],   LEAGUE_AVG["contencao"], LEAGUE_AVG["duelo_aereo"]]
 
-    cats_c = cats + [cats[0]]
-    vals_c = vals + [vals[0]]
-    avg_c  = avg + [avg[0]]
+    n      = len(cats)
+    angles = [math.pi / 2 - 2 * math.pi * i / n for i in range(n)]
 
     r, g, b = hex_to_rgb(pc)
-
     fig = go.Figure()
 
-    # faixas de referência
-    for ring, alpha in [(100, 0.02), (75, 0.04), (50, 0.06), (25, 0.08)]:
-        fig.add_trace(go.Scatterpolar(
-            r=[ring] * len(cats_c),
-            theta=cats_c,
+    # ── anéis de fundo ──────────────────────────────────────────────────────
+    ring_styles = [
+        (100, "rgba(27,231,255,0.02)"),
+        (75,  "rgba(27,231,255,0.04)"),
+        (50,  "rgba(27,231,255,0.055)"),
+        (25,  "rgba(27,231,255,0.07)"),
+    ]
+    for ring_val, fill_color in ring_styles:
+        rx, ry = polar_to_xy([ring_val] * n, angles)
+        fig.add_trace(go.Scatter(
+            x=rx, y=ry,
+            mode="lines",
             fill="toself",
-            fillcolor=f"rgba(27,231,255,{alpha})",
-            line=dict(color="rgba(27,231,255,0.10)", width=0.7),
+            fillcolor=fill_color,
+            line=dict(color="rgba(27,231,255,0.12)", width=0.8),
             hoverinfo="skip",
-            showlegend=False
+            showlegend=False,
         ))
 
-    # média da liga
-    fig.add_trace(go.Scatterpolar(
-        r=avg_c,
-        theta=cats_c,
+    # ── linhas do eixo central ───────────────────────────────────────────────
+    for a in angles:
+        fig.add_trace(go.Scatter(
+            x=[0, math.cos(a)],
+            y=[0, math.sin(a)],
+            mode="lines",
+            line=dict(color="rgba(27,231,255,0.15)", width=0.8),
+            hoverinfo="skip",
+            showlegend=False,
+        ))
+
+    # ── ticks numéricos (25 / 50 / 75 / 100) no eixo do topo ───────────────
+    top_angle = math.pi / 2
+    for tick in [25, 50, 75, 100]:
+        tx = (tick / 100) * math.cos(top_angle) + 0.03
+        ty = (tick / 100) * math.sin(top_angle)
+        fig.add_annotation(
+            x=tx, y=ty,
+            text=str(tick),
+            showarrow=False,
+            font=dict(color="rgba(27,231,255,0.40)", size=8),
+            xanchor="left",
+        )
+
+    # ── linha média da liga ──────────────────────────────────────────────────
+    ax, ay = polar_to_xy(avg, angles)
+    fig.add_trace(go.Scatter(
+        x=ax, y=ay,
+        mode="lines",
         fill="toself",
         fillcolor="rgba(137,128,245,0.10)",
         line=dict(color="#8980F5", width=1.8, dash="dot"),
-        mode="lines",
         name="Média Liga",
-        hovertemplate="<b>%{theta}</b><br>Média: %{r}<extra></extra>"
+        hoverinfo="skip",
     ))
 
-    # jogador
-    fig.add_trace(go.Scatterpolar(
-        r=vals_c,
-        theta=cats_c,
+    # ── polígono do jogador ──────────────────────────────────────────────────
+    vx, vy = polar_to_xy(vals, angles)
+    fig.add_trace(go.Scatter(
+        x=vx, y=vy,
+        mode="lines+markers",
         fill="toself",
         fillcolor=f"rgba({r},{g},{b},0.22)",
         line=dict(color=pc, width=3),
-        mode="lines+markers",
-        marker=dict(size=8, color=pc, line=dict(color="#0D1B2A", width=2)),
+        marker=dict(size=9, color=pc, line=dict(color="#0D1B2A", width=2)),
         name=player_name,
-        hovertemplate="<b>%{theta}</b><br>Valor: %{r}<extra></extra>"
+        hoverinfo="skip",
     ))
 
-    # IMPORTANTE: somente propriedades amplamente suportadas
+    # ── pontos com valor no hover ────────────────────────────────────────────
+    hover_x = [(v / 100) * math.cos(a) for v, a in zip(vals, angles)]
+    hover_y = [(v / 100) * math.sin(a) for v, a in zip(vals, angles)]
+    fig.add_trace(go.Scatter(
+        x=hover_x, y=hover_y,
+        mode="markers",
+        marker=dict(size=10, color=pc, line=dict(color="#0D1B2A", width=2)),
+        text=[f"<b>{c}</b>: {v}" for c, v in zip(cats, vals)],
+        hovertemplate="%{text}<extra></extra>",
+        showlegend=False,
+    ))
+
+    # ── labels das categorias ────────────────────────────────────────────────
+    label_r = 1.25
+    for cat, val, a in zip(cats, vals, angles):
+        lx = label_r * math.cos(a)
+        ly = label_r * math.sin(a)
+        color_val = "#31E981" if val >= 70 else ("#FED766" if val >= 40 else "#FE4A49")
+        fig.add_annotation(
+            x=lx, y=ly,
+            text=f"<span style='font-size:11px;color:#cbd5e1'><b>{cat}</b></span>"
+                 f"<br><span style='color:{color_val};font-size:13px'><b>{val}</b></span>",
+            showarrow=False,
+            align="center",
+            font=dict(size=11),
+        )
+
+    # ── layout 100% cartesiano ───────────────────────────────────────────────
     fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100],
-                tickvals=[25, 50, 75, 100],
-                gridcolor="#1BE7FF18",
-                linecolor="#1BE7FF18"
-            ),
-            angularaxis=dict(
-                gridcolor="#1BE7FF18",
-                linecolor="#1BE7FF22"
-            )
-        ),
-        legend=dict(
-            orientation="h",
-            x=0.5,
-            xanchor="center",
-            y=-0.10,
-            font=dict(color="#94a3b8", size=11)
-        ),
+        xaxis=dict(visible=False, range=[-1.55, 1.55], fixedrange=True),
+        yaxis=dict(visible=False, range=[-1.55, 1.55], fixedrange=True, scaleanchor="x"),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        margin=dict(t=20, b=50, l=55, r=55),
-        height=370
+        showlegend=True,
+        legend=dict(
+            orientation="h",
+            x=0.5, xanchor="center", y=-0.02,
+            font=dict(color="#94a3b8", size=11),
+            bgcolor="rgba(0,0,0,0)",
+        ),
+        margin=dict(t=10, b=30, l=10, r=10),
+        height=400,
     )
     return fig
 
@@ -395,12 +435,11 @@ with st.sidebar:
 
     all_names = list(PLAYERS.keys())
     active_profiles = (
-        (["Combativo"] if f_combativo else []) +
+        (["Combativo"]  if f_combativo  else []) +
         (["Construtor"] if f_construtor else []) +
-        (["Híbrido"] if f_hibrido else []) +
+        (["Híbrido"]    if f_hibrido    else []) +
         (["Posicional"] if f_posicional else [])
     )
-
     filtered = [
         n for n in all_names
         if (not search or search.lower() in n.lower() or search.lower() in PLAYERS[n]["club"].lower())
@@ -426,7 +465,7 @@ with st.sidebar:
     st.markdown('<p style="color:#475569;font-size:12px">👥 Jogadores Analisados: <span style="color:#1BE7FF;font-weight:700">78</span></p>', unsafe_allow_html=True)
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
-p = PLAYERS[selected_player]
+p  = PLAYERS[selected_player]
 pc = PROFILE_COLORS.get(p["profile"], "#1BE7FF")
 text_on_badge = "#0D1B2A" if p["profile"] in PROFILE_TEXT_DARK else "#ffffff"
 
@@ -440,7 +479,6 @@ with col1:
       <div class="player-name">{selected_player}</div>
       <div class="player-pos">{p['position']}</div>
       <div class="player-club">{p['club']}</div>
-
       <div class="info-row">
         <div class="info-cell"><div class="ic-label">Ano</div><div class="ic-val">{p['year']}</div></div>
         <div class="info-cell"><div class="ic-label">Nac.</div><div class="ic-val">{p['nationality']}</div></div>
@@ -449,13 +487,11 @@ with col1:
         <div class="info-cell"><div class="ic-label">Altura</div><div class="ic-val">{p['height']} cm</div></div>
         <div class="info-cell"><div class="ic-label">Pé Dom.</div><div class="ic-val">{p['foot']}</div></div>
       </div>
-
       <div class="stat-row">
         <div class="stat-box" style="flex:2"><div class="sv">{p['minutes']}</div><div class="sl">Minutagem</div></div>
         <div class="stat-box"><div class="sv">{p['goals']}</div><div class="sl">Gols</div></div>
         <div class="stat-box"><div class="sv">{p['assists']}</div><div class="sl">Assist.</div></div>
       </div>
-
       <div style="margin-top:14px;text-align:center">
         <span style="background:{pc};color:{text_on_badge};font-weight:800;font-size:13px;border-radius:20px;padding:5px 20px;letter-spacing:1px">
           {p['profile']}
@@ -474,7 +510,6 @@ with col2:
           <div class="rank-tag">#{p['rank']}</div>
         </div>
       </div>
-
       <div style="background:#0D1B2A;border-radius:10px;padding:14px;border:1px solid #1BE7FF11">
         <div class="r-block">
           <div class="r-label">⚡ COMBATIVO</div>
@@ -483,7 +518,6 @@ with col2:
             <div class="rank-tag">#{p['combativo_rank']}</div>
           </div>
         </div>
-
         <div class="r-block">
           <div class="r-label">🔧 CONSTRUTOR</div>
           <div class="rating-row">
@@ -491,7 +525,6 @@ with col2:
             <div class="rank-tag">#{p['construtor_rank']}</div>
           </div>
         </div>
-
         <div class="r-block" style="margin-bottom:0">
           <div class="r-label">📍 POSICIONAL</div>
           <div class="rating-row">
@@ -519,9 +552,7 @@ with col3:
       <div style="border-top:1px solid #1BE7FF22;padding-top:14px">
         <div class="section-title" style="color:#1BE7FF">🔧 Aspectos de Construção</div>
         {tags_html(p['aspect_const'])}
-        <div style="font-size:10px;color:#475569;margin-top:8px">
-          *PCF = Passes Construtores Finais
-        </div>
+        <div style="font-size:10px;color:#475569;margin-top:8px">*PCF = Passes Construtores Finais</div>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -535,7 +566,7 @@ with col4:
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div>
           <div class="profile-label">Perfil Identificado</div>
-          <div class="profile-name" style="color:{pc}">{p['profile']}</div>
+          <div style="font-size:22px;font-weight:800;color:{pc}">{p['profile']}</div>
         </div>
         <div style="text-align:right">
           <div class="pct-item" style="color:#FE4A49">⚡ Combativo &nbsp;<b>{p['pct_combativo']}%</b></div>
@@ -546,16 +577,19 @@ with col4:
     </div>
     """, unsafe_allow_html=True)
 
-    fig = build_radar(selected_player, p, pc)
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(
+        build_radar(selected_player, p, pc),
+        use_container_width=True,
+        config={"displayModeBar": False},
+    )
 
 with col5:
     bars = (
-        attr_bar("Construção", p["construcao"]) +
-        attr_bar("Ofensividade", p["ofensividade"]) +
-        attr_bar("1vs1 – Defensivo", p["um_vs_um"]) +
-        attr_bar("Contenção", p["contencao"]) +
-        attr_bar("Duelo Aéreo", p["duelo_aereo"])
+        attr_bar("Construção",       p["construcao"])   +
+        attr_bar("Ofensividade",     p["ofensividade"]) +
+        attr_bar("1vs1 – Defensivo", p["um_vs_um"])     +
+        attr_bar("Contenção",        p["contencao"])    +
+        attr_bar("Duelo Aéreo",      p["duelo_aereo"])
     )
     st.markdown(f"""
     <div class="card">
@@ -564,7 +598,7 @@ with col5:
       </div>
       {bars}
       <div style="margin-top:16px;padding-top:12px;border-top:1px solid #1BE7FF11">
-        <div style="font-size:10px;color:#475569;margin-bottom:6px;letter-spacing:.5px">LEGENDA DE CORES</div>
+        <div style="font-size:10px;color:#475569;margin-bottom:6px;letter-spacing:.5px">LEGENDA</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <span style="font-size:11px;color:#31E981">● ≥ 70 Excelente</span>
           <span style="font-size:11px;color:#FED766">● ≥ 40 Médio</span>
